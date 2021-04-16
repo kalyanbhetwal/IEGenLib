@@ -250,6 +250,34 @@ bool Computation::isComplete() const {
     return true;
 }
 
+void Computation::zeroPadExecSchedules() {
+    // calculate longest schedule length
+    int largestScheduleLength = 0;
+    for (Stmt* stmt : stmts) {
+        largestScheduleLength = std::max(
+            stmt->getExecutionSchedule()->outArity(), largestScheduleLength);
+    }
+
+    // extend all execution tuples to match the length of the longest
+    for (Stmt* stmt : stmts) {
+        Relation* execSchedule = new Relation(*stmt->getExecutionSchedule());
+        TupleDecl originalTuple = execSchedule->getTupleDecl();
+        TupleDecl newTuple =
+            TupleDecl(execSchedule->inArity() + largestScheduleLength);
+        // copy over original elements
+        for (unsigned int i = 0; i < originalTuple.size(); ++i) {
+            newTuple.copyTupleElem(originalTuple, i, i);
+        }
+        // fill remainder of expanded tuple with zeroes
+        for (unsigned int i = originalTuple.size(); i < newTuple.size(); ++i) {
+            newTuple.setTupleElem(i, 0);
+        }
+        execSchedule->setTupleDecl(newTuple);
+        stmt->setExecutionSchedule(execSchedule->prettyPrintString());
+        delete execSchedule;
+    }
+}
+
 void Computation::clear() {
     for (auto& stmt : stmts) {
         delete stmt;
@@ -1031,6 +1059,8 @@ void Computation::toDot(std::fstream& dotFile, string fileName) {
 
 std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream generatedCode;
+
+    this->zeroPadExecSchedules();
 
     // convert sets/relations to Omega format for use in codegen, and
     // collect statement macro definitions

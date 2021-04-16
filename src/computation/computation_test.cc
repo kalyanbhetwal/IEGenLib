@@ -681,3 +681,34 @@ TEST_F(ComputationTest, DISABLED_ToDotUnitTest){
     forwardSolve->addStmt(ss2);
     checkToDotString(forwardSolve,"");   
 }
+
+#pragma mark ZeroPadExecSchedules
+// Check execution schedule arity padding
+TEST_F(ComputationTest, ZeroPadExecSchedules) {
+    Stmt* s0 = new Stmt("s0;", "{[i,j]}", "{[i,j] -> [0,i,0,j,0]}", {}, {});
+    Stmt* s1 = new Stmt("s1;", "{[k]}", "{[k] -> [1,k,0]}", {}, {});
+    Stmt* s2 = new Stmt("s2;", "{[k]}", "{[k] -> [1,k,1]}", {}, {});
+    Stmt* s3 = new Stmt("s3;", "{[0]}", "{[0] -> [2]}", {}, {});
+    Computation* comp = new Computation();
+    comp->addStmt(s0);
+    comp->addStmt(s1);
+    comp->addStmt(s2);
+    comp->addStmt(s3);
+
+    comp->zeroPadExecSchedules();
+
+    // check against expected values
+    std::vector<std::string> expectedSchedules = {
+        "{[i,j]->[0,i,0,j,0]}", "{[k]->[1,k,0,0,0]}", "{[k]->[1,k,1,0,0]}",
+        "{[0]->[2,0,0,0,0]}"};
+    for (unsigned int i = 0; i < 4; ++i) {
+        iegenlib::Relation* expectedSchedule =
+            new iegenlib::Relation(expectedSchedules[i]);
+        EXPECT_EQ(
+            expectedSchedule->prettyPrintString(),
+            comp->getStmt(i)->getExecutionSchedule()->prettyPrintString());
+        delete expectedSchedule;
+    }
+
+    delete comp;
+}

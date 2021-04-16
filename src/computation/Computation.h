@@ -132,6 +132,10 @@ class Computation {
     //! including that of the Stmts it contains
     bool isComplete() const;
 
+    //! Zero-pad execution schedules so they are all equal in length to the
+    //! longest one
+    void zeroPadExecSchedules();
+
     //! Clear all data from this Computation
     void clear();
 
