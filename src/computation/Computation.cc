@@ -1770,7 +1770,7 @@ void Computation::padExecutionSchedules() {
         int tmp = getStmt(j)->getExecutionSchedule()->outArity();
         if (tmp > maxArity) { maxArity = tmp; }
     }
-    
+
     // Pads iteration spaces by padding the execution schedule
     // The execution schedule is applied during applyTransformations()
     // Generate composition relation of the form
@@ -1930,7 +1930,7 @@ void Computation::adjustExecutionSchedules() {
             // Compute currTuple - oldTuple
             int level = 0, diff = 0;
             while (level < outArity && diff == 0) {
-                if (currTuple.elemIsConst(level + inArity) 
+                if (currTuple.elemIsConst(level + inArity)
                     && oldTuple.elemIsConst(level)) {
                     diff = currTuple.elemConstVal(level + inArity)
                         - oldTuple.elemConstVal(level);
@@ -1940,7 +1940,7 @@ void Computation::adjustExecutionSchedules() {
             if (diff != 0) { level -= 2; }
             // Update oldTuple
             for( int j = 0; j < outArity; j++) {
-                oldTuple.setTupleElem(j, 
+                oldTuple.setTupleElem(j,
                     currTuple.elemConstVal(j + inArity));
             }
             for (int j = outArity; j < maxArity; j++) {
@@ -1964,7 +1964,7 @@ void Computation::adjustExecutionSchedules() {
             idx++;
             // Update last tuple
             for( int j = 0; j < outArity; j++) {
-                lastTuple.setTupleElem(j, 
+                lastTuple.setTupleElem(j,
                     currTuple.elemConstVal(j + inArity));
             }
             for (int j = outArity; j < maxArity; j++) {
@@ -1972,7 +1972,7 @@ void Computation::adjustExecutionSchedules() {
             }
         }
     }
-     
+
     // Handle any remaining dynamically added statements
 	int stmtNum = lastTuple.elemConstVal(0);
     for (idx; idx < getNumStmts(); idx++) {
@@ -2122,9 +2122,9 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
     // convert sets/relations to Omega format for use in codegen, and
     // collect statement macro definitions
-    VisitorChangeUFsForOmega* vOmegaReplacer = 
+    VisitorChangeUFsForOmega* vOmegaReplacer =
 	    new VisitorChangeUFsForOmega();
-    FlattenUFNestingVisitor* flatner = 
+    FlattenUFNestingVisitor* flatner =
 	    new FlattenUFNestingVisitor();
     std::ostringstream stmtMacroUndefs;
     std::ostringstream stmtMacroDefs;
@@ -2140,18 +2140,20 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
         // Generate the first macro based on the original iteration space
         Set* iterSpace = stmt->getIterationSpace();
-        
-	stmtMacroDefs << "#define s_" << stmtCount << "("
-                      << iterSpace->getTupleDecl().toString() << ")   "
-                      << Computation::stripDataSpaceDelimiter
-		      (stmt->getStmtSourceCode())
+
+        std::string iters = (iterSpace->getTupleDecl().elemIsConst(0)
+                                 ? ""
+                                 : iterSpace->getTupleDecl().toString());
+        stmtMacroDefs << "#define s_" << stmtCount << "(" << iters << ")   "
+                      << Computation::stripDataSpaceDelimiter(
+                             stmt->getStmtSourceCode())
                       << " \n";
 
         // Get the new iteration space set
         Set* newIterSpace = rel->Apply(stmt->getIterationSpace());
         // Flatten UF Nesting
 	newIterSpace->acceptVisitor(flatner);
-        // Enforce prefix rule	
+        // Enforce prefix rule
         newIterSpace->acceptVisitor(vOmegaReplacer);
         // Generate the second macro based on the new iteration space
         // Generate a mapping between the two iteration spaces using
@@ -2200,16 +2202,16 @@ std::string Computation::codeGen(Set* knownConstraints) {
     std::ostringstream UFMacroUndefs;
     std::ostringstream UFMacroDefs;
     for (const auto& macro : *vOmegaReplacer->getUFMacros()) {
-        UFMacroDefs << "#define " << macro.first << " " 
+        UFMacroDefs << "#define " << macro.first << " "
 		<< macro.second << "\n";
     }
     // Create undefs
-    
+
     for (const auto& macro: vOmegaReplacer->getUFMap()){
-        
+
         UFMacroUndefs << "#undef " << macro.first << "\n";
     }
-    
+
     generatedCode << stmtMacroUndefs.str() << stmtMacroDefs.str() << "\n";
     generatedCode << UFMacroUndefs.str() << UFMacroDefs.str() << "\n";
 
@@ -2644,7 +2646,7 @@ void Stmt::replaceDataSpace(std::string searchString, std::string replaceString)
     for (auto& read : dataReads) {
         if (read.first == searchString) { read.first = replaceString; }
     }
-    //Rename data space in iteration space 
+    //Rename data space in iteration space
     std::string iterStr = iterationSpace->getString();
     iterStr = iegenlib::replaceInString(iterStr, searchString, replaceString);
     iterationSpace.reset(new Set(iterStr));
