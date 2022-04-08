@@ -2173,8 +2173,7 @@ std::string Computation::codeGen(Set* knownConstraints) {
             // Print the expression
             // If e->equalZero = true, the expression may have no terms
             // and prettyPrintString will print '', not '0'
-            stmtMacroDefs << (e && !e->equalsZero() ?
-                e->prettyPrintString(decl) : "0");
+            stmtMacroDefs << e->prettyPrintString(decl);
             if (e) { delete e; }
 
             first = false;
