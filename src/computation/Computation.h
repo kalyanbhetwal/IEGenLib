@@ -36,6 +36,7 @@
 #include "set_relation/expression.h"
 #include "set_relation/set_relation.h"
 #include "set_relation/VisitorChangeUFsForOmega.h"
+#include "SSA.h"
 
 namespace iegenlib {
 
@@ -430,7 +431,8 @@ class Stmt {
 
     //! Move constructor
     Stmt &operator=(Stmt &&other) noexcept = delete;
-
+    //! Removes a pair from vector
+    void removeReadDataSpace(int loc);
     //! Replaces read everywhere in the Stmt
     void replaceRead(std::string searchStr, std::string replaceStr);
     //! Replaces read data space

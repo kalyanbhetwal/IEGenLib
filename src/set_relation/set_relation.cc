@@ -27,6 +27,8 @@
 #include <omega/hull.h>
 
 #include "VisitorChangeUFsForOmega.h"
+#include <regex>
+#include <sstream>
 
 namespace iegenlib{
 
@@ -168,7 +170,6 @@ Set* islSetComplement (Set* s){
 Set* islSetProjectOut(Set* s, unsigned pos) {
 
     string sstr = s->toISLString();
-
     // Using isl to project out tuple variable #pos
     isl_ctx *ctx = isl_ctx_alloc();
     string islStr = islSetToString (
@@ -1690,11 +1691,7 @@ Conjunction*  Conjunction::TransitiveClosure(){
 	// Add edge between lhs and rhs in the graph.
         g->addEdge(lhsNode,rhsNode,EdgeType::GREATER_OR_EQUAL_TO);
     }
-    //std::cout <<  "Before: \n";
-    //std::cout << g->toDotString();
     g->Closure();
-    //std::cout <<  "After: \n";
-    //std::cout << g->toDotString();
     // Delete all expressions in the retVal conjunction.
     retVal->reset();
 
@@ -1835,6 +1832,19 @@ void SparseConstraints::pushConstToConstraints(){
         c->pushConstToConstraints();
     }
 }
+
+/*! Pushes constants in constraints into the tuple declaration.
+*/
+void SparseConstraints::pushConstConstraintsToTupleDecl(){
+
+    for (std::list<Conjunction*>::iterator i=mConjunctions.begin();
+            i != mConjunctions.end(); i++) {
+        Conjunction* c = *i;
+        c->pushConstConstraintsToTupleDecl();
+    }
+}
+
+
 
 //! For all conjunctions, sets them to the given tuple declaration.
 //! If there are some constants that don't agree then throws exception.
@@ -2233,7 +2243,56 @@ Set::Set(std::string str) {
 Set::Set(int arity) : SparseConstraints(), mArity(arity) {
     addConjunction(new Conjunction(TupleDecl::sDefaultTupleDecl(arity)));
 }
+/*
+ *Lexicographically sorting sets
+ */
+bool Set::LexiLess(Set * other){
+    Set a_copy = *this;
+    Set b_copy = *other;
+    int max = std::max( a_copy.getArity(), b_copy.getArity());
+    Set* aa = a_copy.addPadding(max);
+    Set* bb = b_copy.addPadding(max);
 
+//    std::cout <<" After padding " << aa->prettyPrintString()<<'\n';
+//    std::cout <<" After padding " << bb->prettyPrintString()<<'\n';
+
+    bool ret_value = (aa->getTupleDecl() < bb->getTupleDecl());
+    return ret_value;
+}
+
+/*
+ * add zeros at the end to make arity equal
+ */
+Set* Set::addPadding(int n){
+    int input_arity = this->getArity();
+    int arity_diff = n - input_arity;
+    std::string paddedString;
+    if(arity_diff) {
+        //tupledecl t = tnis -> getTupleDecl().toString();
+        std::ostringstream oss;
+        oss << this->prettyPrintString();
+        std::string s = oss.str();
+        std::regex rgx("(.*)](.*)", std::regex::extended);
+        std::smatch matches;
+
+        if (std::regex_search(s, matches, rgx)) {
+           //std::cout << "test " << matches[2] << '\n';
+            paddedString = matches[1].str();
+            for (int i = 0; i < arity_diff; i++) {
+                paddedString = paddedString + ",0";
+            }
+            paddedString += "]";
+            paddedString += matches[2].str();
+
+            //std::cout << "test1 " << paddedString << '\n';
+
+            Set *newset = new Set(paddedString);
+            return newset;
+        }
+    }
+    return(this);
+
+}
 //! Creates a set with the specified tuple declaration.
 //! It starts with no constraints so all tuples of that arity belong in it.
 Set::Set(TupleDecl tdecl) : SparseConstraints(), mArity(tdecl.size()) {
@@ -3361,6 +3420,19 @@ Set* Relation::ToSet(){
 }
 
 
+bool Set::isSubset(Set* other){
+    assert(mArity == other->arity() && "isSubset: mismatch arity");
+    Set* thisClosure = this->TransitiveClosure();
+    Set* otherClosure = other->TransitiveClosure();
+    Set* setIntersect = thisClosure->Intersect(otherClosure);
+    // circumvent possible inequivalnce by using closure.
+    bool res = *setIntersect == *thisClosure;
+    delete setIntersect;
+    delete otherClosure;
+    delete thisClosure;
+    return res;
+}
+
 /******************************************************************************/
 #pragma mark -
 /*************** ExpTermVisitor *****************************/
@@ -4110,7 +4182,6 @@ public:
         cc->setInArity(0);
         Set * cs = new Set(cc->arity() );
         cs->addConjunction(cc);
-
         // Send through ISL to project out desired tuple variable
         Set* islSet = islSetProjectOut(cs, tvar);
 
@@ -4228,9 +4299,8 @@ class VisitorFindMultiVarUFCalls : public Visitor {
 
 Set *Set::projectOut(int tvar) {
     // find transitive closure
+
     Set *closure = this->TransitiveClosure();
-    
-    
     // Check if this tuple variable is directly equal to another
     // tuple variable.
     bool hasDirectReplacement = false;
@@ -4314,6 +4384,25 @@ Set *Set::projectOut(int tvar) {
 
     return result;
 }
+
+ Set* Set::projectOutConst(Set* s){
+     Set* res = new Set(*s);
+    // Set * s1;
+    TupleDecl tl = s->getTupleDecl();
+    if( tl.size()==1){
+        return s;
+    }
+    //std::cout <<"Before  projecting out const " << s -> prettyPrintString() <<'\n';
+    // i > 0 so that last element isn't removed at all
+    for(int i= tl.size()-1; i>=0 ;i--){
+        if( tl.elemIsConst(i) && res->getTupleDecl().size()>1) {
+            //std::cout<< "the const elem are " << i <<'\n';
+            res = res->projectOut(i);
+        }
+    }
+    //std::cout <<"After projecting out const " << res -> prettyPrintString() <<'\n';
+    return res;
+};
 
 Relation *Relation::projectOut(int tvar) {
     // find transitive closure

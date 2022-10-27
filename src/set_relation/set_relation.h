@@ -447,6 +447,11 @@ public:
     void pushConstToConstraints();
 
 
+    /*! Pushes constants in constraints into the tuple declaration.
+    */
+    void pushConstConstraintsToTupleDecl();
+    
+    
     //! Remove duplicate constraints and trivial constraints
     void cleanUp();
 
@@ -673,6 +678,8 @@ public:
     **  unchanged. User owns the returned Set object.
     */
     Set* boundDomainRange();
+    
+    
 
     //! Send through ISL to achieve a canonical form.
     void normalize(bool bdr=true);
@@ -765,6 +772,22 @@ public:
     void reOrdTV_OmegaCodeGen(std::set<int> parallelTvs);
     //
     void removeUPs();
+    
+    /**
+     * This function returns true if this set is a subset
+     * of some other set
+     * \param other is not adopted
+     * */
+    bool isSubset(Set* other);
+
+    // Sorts given two sets lexicographically
+    bool LexiLess(Set * other);
+
+    // Removes constants from the set
+    static  Set* projectOutConst(Set* s);
+
+    //adds zeros at the end of the set to make arity equal
+    Set* addPadding(int n);
 
 private:
     int mArity;

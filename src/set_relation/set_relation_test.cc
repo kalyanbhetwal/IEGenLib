@@ -468,7 +468,7 @@ TEST_F(SetRelationTest, RelationWithUFCall) {
 
 }
 
-#pragma mark SolveForFactor
+#pragma mark Set(olveForFactor
 TEST_F(SetRelationTest, SolveForFactor) {
     iegenlib::setCurrEnv();
     // Now set up an environment that defines an inverse for f.
@@ -4119,11 +4119,6 @@ TEST_F(SetRelationTest, projectOut)
         s1 = s2;
     }
 
-    s2 = s1->projectOut(2);
-    if (s2) {
-        delete s1;
-        s1 = s2;
-    }
     EXPECT_EQ(s2->prettyPrintString(), "");
     delete s1;
 
@@ -4146,6 +4141,13 @@ TEST_F(SetRelationTest, projectOut)
     EXPECT_EQ(s1->toISLString(), ex_s1->toISLString());
     delete s1, ex_s1;
 
+    iegenlib::Set* s4 ;
+    iegenlib::Set* s5 = new iegenlib::Set("{ [2, t, 1, p, 1, q, 0] : t >= 0 && p - 11 >= 0 &&"
+		    "q - 11 >= 0 && -t + M - 1 >= 0 }");
+    s4 = s5->projectOut(6);
+    EXPECT_EQ(s4->prettyPrintString(),"{ [2, t, 1, p, 1, q] : t >= 0 &&"
+		    " p - 11 >= 0 && q - 11 >= 0 && M - 1 >= 0"
+		    " && -t + M - 1 >= 0 }" );
     /* Relations (same functionality as sets) */
     Relation* r1;
     Relation* r2;
@@ -4748,7 +4750,6 @@ TEST_F(SetRelationTest, DISABLED_SolveForOutputTuple){
 // Test transitive closure.
 TEST_F(SetRelationTest, TransitiveClosure){
     
-	
     Relation * rel = new Relation(
 	     "{[i,j] -> [k]: A(i,j) > 0 and rowptr(i) <= k"
 	     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
@@ -4809,7 +4810,16 @@ TEST_F(SetRelationTest, TransitiveClosure){
 	      " n - idx(i) - 1 >= 0 && n - idx(i + 1) - 1"
 	      " >= 0 && -idx(i) + idx(i + 1) - 1 >= 0 }"
 	      ,clo5->prettyPrintString());
-
+    iegenlib::Set* s5 = new iegenlib::Set("{ [2, t, 1, p, 1, q, 0] :"
+		    " t >= 0 && p - 11 >= 0 && q - 11 >= 0 && -t + M"
+		    " - 1 >= 0 }");
+    Set* c5 = s5->TransitiveClosure();
+    EXPECT_EQ(c5->prettyPrintString(),"{ [2, t, 1, p, 1, q, 0] : t >= 0 &&"
+		    " p - 11 >= 0 && q - 11 >= 0 && M - 1 >= 0 &&"
+		    " -t + M - 1 >= 0 }");
+    
+    delete s5;
+    delete c5;
     delete set;
     delete clo5;
     delete rel4;
@@ -4819,7 +4829,7 @@ TEST_F(SetRelationTest, TransitiveClosure){
     delete clo2;
     delete rel2;
     delete closure;
-    delete rel;
+    delete rel; 
 }
 
 
@@ -4986,4 +4996,96 @@ TEST_F(SetRelationTest, TupleBoundsTest){
 
     EXPECT_EQ("",(*lowerBounds.begin())->
 		    prettyPrintString(domain->getTupleDecl()));
+}
+
+
+TEST_F(SetRelationTest, IsSubset) {
+    Set *s1 = new Set("{[i]: 0 <= i < N && x < 0}");
+    Set *s2 = new Set("{[i]: 0 <= i < N}");
+    EXPECT_FALSE(s2->isSubset(s1));
+    EXPECT_TRUE(s1->isSubset(s2));
+    delete s1;
+    delete s2;
+    s1 = new Set("{ [t] : t >= 0 && -t + M - 1 >= 0 }");
+    s2 = new Set("{ [t] : t >= 0 && S - 1 >= 0 && -t + M - 1 >= 0 }"); 
+    EXPECT_TRUE(s2->isSubset(s1));
+    EXPECT_FALSE(s1->isSubset(s2));
+}
+TEST_F(SetRelationTest, ProjectOutConstTest ){
+    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
+    iegenlib::Set* s2 = new iegenlib::Set("{[0,i,1] : 0 <=i< N && x >10}");
+    iegenlib::Set* s3 = new iegenlib::Set("{[0,i,2] : 0 <=i< N && x <=10}");
+
+
+    Set * s1_afterP;
+    s1_afterP = s1->projectOutConst(s1);
+    EXPECT_EQ(s1_afterP->prettyPrintString(),"{ [i] : i >= 0 && N - 1 >= 0 && -i + N - 1 >= 0 }");
+
+    Set * s2_afterP;
+    s2_afterP = s2->projectOutConst(s2);
+    EXPECT_EQ(s2_afterP->prettyPrintString(),"{ [i] : i >= 0 && N - 1 >= 0 && x - 11 >= 0 && -i + N - 1 >= 0 }");
+
+
+    Set * s3_afterP;
+    s3_afterP = s3->projectOutConst(s3);
+    EXPECT_EQ(s3_afterP->prettyPrintString(),"{ [i] : i >= 0 && N - 1 >= 0 && -x + 10 >= 0 && -i + N - 1 >= 0 }");
+
+
+    Set* s4 = new iegenlib::Set("{[0] }");
+    Set* s4_afterP;
+    s4_afterP = s4->projectOutConst(s4);
+    std::cout << s4_afterP->prettyPrintString();
+
+    iegenlib::Set* s5 = new iegenlib::Set("{[3,0,0]}");
+    Set* s5_afterP;
+    s5_afterP = s5->projectOutConst(s5);
+    std::cout << s5_afterP->prettyPrintString();
+
+    delete s1_afterP;
+    delete s2_afterP;
+    delete s3_afterP;
+    delete s4_afterP;
+    delete s5_afterP;
+
+
+    //std::cout << "after projection " << s1_afterP->prettyPrintString()<<'\n';
+}
+
+TEST_F(SetRelationTest, SetPadding){
+    iegenlib::Set* s1 = new iegenlib::Set("{[0,i,0] : 0 <=i< N}");
+    iegenlib::Set* s2 = new iegenlib::Set("{[i] : 0 <=i< N}");
+
+    int max = std::max( s1->getArity(), s2->getArity());
+
+    Set* s3  = s2->addPadding(max);
+    EXPECT_EQ(s3->prettyPrintString(), "{ [i, 0, 0] : i >= 0 && -i + N - 1 >= 0 }");
+}
+
+TEST_F(SetRelationTest, LexiSort){
+    iegenlib::Set* s1 = new iegenlib::Set("{[2, t, 0] : t >= 0 && -t + M - 1 >= 0 }");
+    iegenlib::Set* s2 = new iegenlib::Set("{ [2, t, 0, m, 0] : t >= 0 && -m + 10 >= 0 && -t + M - 1 >= 0 }");
+
+    bool status = s1->LexiLess(s1);
+    EXPECT_EQ(status, true);
+
+    iegenlib::Set* s3 = new iegenlib::Set("{[3] : 0 <=i< N}");
+    iegenlib::Set* s4 = new iegenlib::Set("{[2,i,0] : 0 <=i< N}");
+    Set* ss ;
+    bool status1 = s3->LexiLess(s3);
+    EXPECT_EQ(status1, false);
+}
+
+
+TEST_F(SetRelationTest, ProjectOutISL){
+    Set* s = new Set("{ [t, s] : t >= 0 && s >= 0 && M - 1 >= 0 &&"
+		    " S - 1 >= 0 && -t + M - 1 >= 0"
+		    " && -s + S - 1 >= 0 }");
+    // This is called internally in our project out.
+    Set* islSet = islSetProjectOut(s, 1);
+    Set* tranClose = islSet->TransitiveClosure(); 
+    EXPECT_EQ("{ [t] : t >= 0 && M - 1 >= 0 && S - 1 >= 0 && -t + M - 1 >= 0 }",
+		    tranClose->prettyPrintString());
+    delete s;
+    delete islSet;
+    delete tranClose;
 }
