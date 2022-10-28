@@ -88,20 +88,25 @@ void SSA::Node::printPredDom(){
     for( int a=0;a<comp->getNumStmts();a++){
         stmts.push_back(comp->getStmt(a));
     }
-    std::vector<Set> processedList;
 
     for(int i=0; i<stmts.size(); i++){
+        //std:: cout << "the stmt is " << stmts[i]->prettyPrintString() <<std::endl;
         iegenlib::Set* s1 = stmts[i]->getExecutionSchedule()->Apply( stmts[i]->getIterationSpace());
 
+        string s  = s1->getString();
+        s.erase(remove(s.begin(), s.end(), '$'), s.end());\
+
+        Set * s2 = new Set(s);
+
+        //std:: cout << "execution schedule "<< s2->prettyPrintString() << std::endl;
         int numWrites = stmts[i]->getNumWrites();
         for (int j = 0; j < numWrites; ++j){
             Node::globals[stmts[i]->getWriteDataSpace(j)].push_back(stmts[i]);
-            //std::cout << "variables    " << stmts[i]->getWriteDataSpace(j)<<" ,  "<< i<<'\n';
         }
 
         //std::cout << s1->prettyPrintString()<<'\n';
         std::vector<Set*>v;
-        v = getPrefixes(s1);
+        v = getPrefixes(s2);
         SSA::Node * current = rootNode;
 
         for(int j= v.size()-1;j>=0;j--){
@@ -202,23 +207,25 @@ void SSA::generateSSA(iegenlib::Computation *comp) {
             // std::cout << "----------------------------------------"<<std::endl;
         }
         std::map<Stmt *, std::vector<Stmt *>>::iterator phis;
-        for (phis = phiLoc.begin(); phis != phiLoc.end(); phis++) {
 
-            Stmt* phi  = new Stmt(
-                    "phi",
-                    phis->first->getIterationSpace()->getString(),
-                    phis->first->getExecutionSchedule()->getString(),
-                    {{newName,"{[0]->[0]}" }},
-                    {{newName, "{[0]->[0]}"}}
-            );
-            phi->setPhiNode(true);
-            comp->addStmt(phi);
-            //replace with multimap
-            phi_to_stmt[phi] = phis->first;
-            stmt_to_phi[phis->first] = phi;
+        if(phiLoc.size() >1) {
+            for (phis = phiLoc.begin(); phis != phiLoc.end(); phis++) {
+                Stmt *phi = new Stmt(
+                        "phi",
+                        phis->first->getIterationSpace()->getString(),
+                        phis->first->getExecutionSchedule()->getString(),
+                        {{newName, "{[0]->[0]}"}},
+                        {{newName, "{[0]->[0]}"}}
+                );
+                phi->setPhiNode(true);
+                comp->addStmt(phi);
+                //replace with multimap
+                phi_to_stmt[phi] = phis->first;
+                stmt_to_phi[phis->first] = phi;
 
+            }
+            readLoc[it->first] = phiLoc;
         }
-        readLoc[it->first] = phiLoc;
     }
 
     int counter = 0;
@@ -268,9 +275,7 @@ void SSA::generateSSA(iegenlib::Computation *comp) {
                         if(std::find(r.begin(), r.end(),ss ) == r.end()){
                             r.push_back(ss);
                         }
-
                         for(auto v: r){
-
                             for (int j = 0; j < v->getNumWrites(); j++){
                                 if(v->getWriteDataSpace(j).find(test)!= std::string::npos){
 
@@ -290,10 +295,10 @@ void SSA::generateSSA(iegenlib::Computation *comp) {
 
                 Stmt * s_phi = stmt_to_phi[s1];
                 for (int l = 0; l < s1->getNumReads(); l++){
-                   // std:: cout << s1->getReadDataSpace(l) << "    "<< read <<std::endl;
+                    std:: cout << s1->getReadDataSpace(l) << "   ab  "<< read <<std::endl;
 
                     if(s1->getReadDataSpace(l)==read){
-                      //std:: cout << s1->getReadDataSpace(l) << "    "<< s_phi->getWriteDataSpace(0) <<std::endl;
+                        std:: cout << s1->getReadDataSpace(l) << "  cd  "<< s_phi->getWriteDataSpace(0) <<std::endl;
                         s1->replaceReadDataSpace( s1->getReadDataSpace(l), s_phi->getWriteDataSpace(0));
                         break;
                     }
@@ -305,21 +310,24 @@ void SSA::generateSSA(iegenlib::Computation *comp) {
                //std::cout << " the pred size is "<< pred.size()<<std::endl;
                if(pred.size()>0){
                    Stmt* s_pred = pred[0];
-                   //std::cout << " ----- pred list " <<  s_pred->prettyPrintString();
+                   //std::cout << " ----- pred list---------- " <<  s_pred->prettyPrintString();
+                   //std::cout << " ----- stmt list---------- " <<  s1 ->prettyPrintString();
                    int k;
+                   bool match = false;
                    for ( k = 0; k < s_pred->getNumWrites(); k++){
                      // std:: cout << s_pred->getWriteDataSpace(k) << "   sb  "<< test <<std::endl;
 
                        if(s_pred->getWriteDataSpace(k).find(test)!= std::string::npos){
+                           match = true;
                            break;
                        }
                    }
-                  // std::cout << "the value of k is "<< k << std::endl;
-                   if( s_pred->getNumWrites()>0) {
+                 // std::cout << "the value of k is "<< k << std::endl;
+                   if( s_pred->getNumWrites()>0 and match) {
                        for (int l = 0; l < s1->getNumReads(); l++) {
-                            //std:: cout << s1->getReadDataSpace(l) << "  tttttt   "<< test <<std::endl;
+                           //std:: cout << s1->getReadDataSpace(l) << "  tttttt   "<< test <<std::endl;
                            if (s1->getReadDataSpace(l) == read) {
-                               //std:: cout << s1->getReadDataSpace(l) << "  t  "<< s_pred->getWriteDataSpace(k) << "  the test is " << test<<std::endl;
+                              // std:: cout << s1->getReadDataSpace(l) << "  t  "<< s_pred->getWriteDataSpace(k) << "  the test is " << test<<std::endl;
                                s1->replaceReadDataSpace(s1->getReadDataSpace(l), s_pred->getWriteDataSpace(k));
                                break;
                            }

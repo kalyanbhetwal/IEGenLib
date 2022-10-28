@@ -313,7 +313,7 @@ TEST(SSATest, Parflowio){
                     {"nz" ,"{[nsg]->[0]}"},
                     {"rz" ,"{[nsg]->[0]}"},
                     {"ry" ,"{[nsg]->[0]}"},
-                    {"rz" ,"{[nsg]->[0]}"}
+                    {"rz" ,"{[nsg]->[0]}"},
             });
 
     parflowio.addStmt(&s0);
@@ -358,9 +358,9 @@ TEST(SSATest, Parflowio){
             "{[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids}",
             "{[nsg,k,i]->[0, nsg,2 , k, 0,i,0 ]}",
             {
+                    {"qq", "{[nsg,k,i] -> [0]}"},
                     {"m_fp", "{[nsg] -> [0]}"},
                     {"m_data", "{[nsg,k,i] -> [0]}"},
-                    {"qq", "{[nsg,k,i] -> [0]}"}
             },
             {   {"m_fp", "{[nsg] -> [0]}"},
                 {"buf", "{[nsg,k,i] -> [0]}"}
@@ -387,7 +387,7 @@ TEST(SSATest, Parflowio){
              },
              {
                      {"tmp", "{[nsg,k,i,j] -> [0]}"},
-                     {"m_data", "{[nsg,k,i,j] -> [0]}"}
+                     {"m_data", "{[nsg,k,i,j] -> [0]}"},
              });
 
     parflowio.addStmt(&s12);
@@ -414,7 +414,7 @@ TEST(SSATest, Parflowio){
 
     //Calling
     parflowio.finalize();
-    std:: cout << parflowio.toDotString()<<'\n';
+  //  std:: cout << parflowio.toDotString()<<'\n';
     EXPECT_EQ(1,1);
 
 }
