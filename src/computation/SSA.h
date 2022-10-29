@@ -110,7 +110,7 @@ public:
     void generateSSA(Computation * comp);
     Node* createScheduleTree( Computation* comp);
     std::vector<Set*> getPrefixes(Set*s);
+    void rename(Computation * comp);
 
-    string rename( std::map<string, int> &counter, std::map<string, int> &stack,string n );
 };
 #endif

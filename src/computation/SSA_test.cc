@@ -242,8 +242,6 @@ TEST(SSATest, MTTKRP){
     Stmt *s2 = new Stmt("x=2", "{[0]}", "{[0]->[2]}",{},{});
     mttkrp.addStmt(s2);
 
-    SSA::generateSSA(&mttkrp);
-
     mttkrp.finalize();
     std:: cout << mttkrp.toDotString();
 
@@ -414,8 +412,8 @@ TEST(SSATest, Parflowio){
 
     //Calling
     parflowio.finalize();
-  //  std:: cout << parflowio.toDotString()<<'\n';
-    EXPECT_EQ(1,1);
+    std:: cout << parflowio.toDotString()<<'\n';
+    EXPECT_EQ("1","1");
 
 }
 
