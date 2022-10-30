@@ -41,6 +41,12 @@ add_dependencies(parflowio_full iegenlib)
 target_link_libraries(parflowio_full iegenlib isl codegen omega gmp)
 target_include_directories(parflowio_full PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
+file(GLOB_RECURSE parflowio_write_SOURCES parflowio_write.cc)
+add_executable(parflowio_write EXCLUDE_FROM_ALL ${parflowio_write_SOURCES})
+add_dependencies(parflowio_write iegenlib)
+target_link_libraries(parflowio_write iegenlib isl codegen omega gmp)
+target_include_directories(parflowio_write PUBLIC ${CMAKE_SOURCE_DIR}/src)
+
 file(GLOB_RECURSE geoac_codegen_driver_SOURCES geoac_codegen_driver.cc)
 add_executable(geoac_codegen_driver EXCLUDE_FROM_ALL ${geoac_codegen_driver_SOURCES})
 add_dependencies(geoac_codegen_driver iegenlib)
@@ -78,7 +84,7 @@ target_link_libraries(array_example iegenlib isl codegen omega gmp)
 target_include_directories(array_example PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 # Set binary output directory for examples
-set_target_properties(executor COOtoCSR sparse_format_example mttkrp parflowio parflowio_full computation_example geoac_codegen_driver manual_graph_testing macro_testing append_computation_example miniFluxDiv_codegen_driver
+set_target_properties(executor COOtoCSR sparse_format_example mttkrp parflowio parflowio_full parflowio_write computation_example geoac_codegen_driver manual_graph_testing macro_testing append_computation_example miniFluxDiv_codegen_driver
 		PROPERTIES
 		RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tutorial"
 		COMPILE_FLAGS "-g"
@@ -92,6 +98,7 @@ add_custom_target(tutorial
 		mttkrp
 		parflowio
 		parflowio_full
+		parflowio_write
 		computation_example
 		geoac_codegen_driver
 		manual_graph_testing
