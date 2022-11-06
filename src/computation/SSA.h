@@ -111,6 +111,7 @@ public:
     Node* createScheduleTree( Computation* comp);
     std::vector<Set*> getPrefixes(Set*s);
     void rename(Computation * comp);
+    void renameSSA(Computation* comp);
 
 };
 #endif
