@@ -60,6 +60,12 @@ public:
      std::vector<Member*> getMembers() ;
 
     void calc_all_pred();
+    
+    /*
+     * This function calculate all back ward paths
+     * all the way to the root.
+     * */
+    void calc_all_backward_paths();
 
     void printBreadthFirst();
 
@@ -87,9 +93,19 @@ public:
     Member();
     Member(Set* s, Stmt * s1);
     static std::map<Stmt*, std::vector<Stmt*>> predecessor;
+    static std::map<Stmt*, std::vector<Stmt*>> possiblePaths;
     void printBreadthFirst();
     void calc_all_pred(Node* n);
+    /*
+     * Function calculates all possible paths from this member
+     * too the entry node
+     * */
+    void calc_all_backward_path(Node* n);
+
     std::vector<Stmt*> pred_and_dom(Node* n, int idx);
+    
+    std::vector<Stmt*> pred_path(Node* n, int idx);
+    
     ~Member();
 
     Set *getSchedule() ;
