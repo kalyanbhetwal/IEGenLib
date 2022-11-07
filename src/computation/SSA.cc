@@ -189,19 +189,7 @@ void SSA::rename(Computation * comp){
     }
 }
 
-void SSA::generateSSA(iegenlib::Computation *comp) {
-    Node * node = createScheduleTree(comp);
-
-    node->calc_all_pred();
-    
-    node->calc_all_backward_paths();
-
-    //node->printPredDom();
-
-    node-> computeDF();
-
-    //node->printDF();
-
+void SSA::renameSSA(Computation* comp){
     std::map<string, std::vector<Stmt*>>::iterator it;
     std::map<string,  std::map<Stmt *, std::vector<Stmt *>>> readLoc;
     std::map<Stmt* , Stmt*> phi_to_stmt;
@@ -214,8 +202,8 @@ void SSA::generateSSA(iegenlib::Computation *comp) {
         for (int v = 0; v < it->second.size(); v++) {
 
             if (Node::DF.find(it->second[v]) != Node::DF.end()) {
-                 //std::cout << "contributing node " << it->second[v]->getExecutionSchedule()->prettyPrintString()
-                 //        << std::endl;
+                //std::cout << "contributing node " << it->second[v]->getExecutionSchedule()->prettyPrintString()
+                //        << std::endl;
                 std::vector<Stmt *> insert_phi_at = Node::DF.at(it->second[v]);
                 for (auto stmt: insert_phi_at) {
 
@@ -307,7 +295,7 @@ void SSA::generateSSA(iegenlib::Computation *comp) {
                         }
                     }
                 }
-               s1->removeReadDataSpace(0);
+                s1->removeReadDataSpace(0);
             }
                 // trying to edit reads on complementary node of phi node
             else if(readLoc[read].find(s1)!=readLoc[read].end()){
@@ -322,35 +310,35 @@ void SSA::generateSSA(iegenlib::Computation *comp) {
 
             }
             else{
-               std::vector<Stmt*> pred= SSA::Member::predecessor[s1];
-               //std::cout << " the pred size is "<< pred.size()<<std::endl;
-               if(pred.size()>0){
-                   Stmt* s_pred = pred[0];
-                   //std::cout << " ----- pred list---------- " <<  s_pred->prettyPrintString();
-                   //std::cout << " ----- stmt list---------- " <<  s1 ->prettyPrintString();
-                   int k;
-                   bool match = false;
-                   for ( k = 0; k < s_pred->getNumWrites(); k++){
-                     // std:: cout << s_pred->getWriteDataSpace(k) << "   sb  "<< test <<std::endl;
+                std::vector<Stmt*> pred= SSA::Member::predecessor[s1];
+                //std::cout << " the pred size is "<< pred.size()<<std::endl;
+                if(pred.size()>0){
+                    Stmt* s_pred = pred[0];
+                    //std::cout << " ----- pred list---------- " <<  s_pred->prettyPrintString();
+                    //std::cout << " ----- stmt list---------- " <<  s1 ->prettyPrintString();
+                    int k;
+                    bool match = false;
+                    for ( k = 0; k < s_pred->getNumWrites(); k++){
+                        // std:: cout << s_pred->getWriteDataSpace(k) << "   sb  "<< test <<std::endl;
 
-                       if(s_pred->getWriteDataSpace(k).find(test)!= std::string::npos){
-                           match = true;
-                           break;
-                       }
-                   }
-                 // std::cout << "the value of k is "<< k << std::endl;
-                   if( s_pred->getNumWrites()>0 and match) {
-                       for (int l = 0; l < s1->getNumReads(); l++) {
-                           //std:: cout << s1->getReadDataSpace(l) << "  tttttt   "<< test <<std::endl;
-                           if (s1->getReadDataSpace(l) == read) {
-                              // std:: cout << s1->getReadDataSpace(l) << "  t  "<< s_pred->getWriteDataSpace(k) << "  the test is " << test<<std::endl;
-                               s1->replaceReadDataSpace(s1->getReadDataSpace(l), s_pred->getWriteDataSpace(k));
-                               break;
-                           }
-                       }
-                   }
+                        if(s_pred->getWriteDataSpace(k).find(test)!= std::string::npos){
+                            match = true;
+                            break;
+                        }
+                    }
+                    // std::cout << "the value of k is "<< k << std::endl;
+                    if( s_pred->getNumWrites()>0 and match) {
+                        for (int l = 0; l < s1->getNumReads(); l++) {
+                            //std:: cout << s1->getReadDataSpace(l) << "  tttttt   "<< test <<std::endl;
+                            if (s1->getReadDataSpace(l) == read) {
+                                // std:: cout << s1->getReadDataSpace(l) << "  t  "<< s_pred->getWriteDataSpace(k) << "  the test is " << test<<std::endl;
+                                s1->replaceReadDataSpace(s1->getReadDataSpace(l), s_pred->getWriteDataSpace(k));
+                                break;
+                            }
+                        }
+                    }
 
-               }
+                }
 
             }
         }
@@ -359,6 +347,21 @@ void SSA::generateSSA(iegenlib::Computation *comp) {
 //        std:: cout << "updated stmt " << s1->prettyPrintString() << std::endl;
 //        std:: cout <<"---------------------------------------------------"<< std::endl;
     }
+}
+
+void SSA::generateSSA(iegenlib::Computation *comp) {
+    Node * node = createScheduleTree(comp);
+
+    node->calc_all_pred();
+
+    //node->printPredDom();
+
+    node-> computeDF();
+
+    //node->printDF();
+
+    SSA::renameSSA(comp);
+
 
 }
 
@@ -378,9 +381,7 @@ void SSA::Node::computeDF() {
                    // std:: cout << "r  "<< runner->getExecutionSchedule()->prettyPrintString()<<std::endl;
                     Node::DF[runner].push_back((Stmt*)it->first);
                     runner = (Stmt*)Member::predecessor[runner][Member::predecessor[runner].size()-1];
-
                 }
-
                 //std::cout <<"-----------------------------------------------"<<std::endl;
             }
 
@@ -389,7 +390,6 @@ void SSA::Node::computeDF() {
 }
 
 SSA::Node* SSA::Node::insert(SSA::Member * m){
-//
     if(m->getSchedule()->getArity() != common_arity){
         return NULL;
     }
