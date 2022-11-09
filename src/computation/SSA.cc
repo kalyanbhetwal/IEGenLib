@@ -22,7 +22,7 @@
 #include "Computation.h"
 #include <utility>
 #include <string>
-
+#include <regex>
 
 using namespace SSA;
 using namespace iegenlib;
@@ -257,6 +257,44 @@ void SSA::renameSSA(Computation* comp){
         readLoc[it->first] = phiLoc;
 
     }
+    //insert definition phis at certain locations
+
+    for(int k=0; k<comp->getNumStmts(); k++){
+        Stmt * st = comp->getStmt(k);
+        if(!st->isPhiNode()){
+            for (int j = 0; j < st->getNumWrites(); j++) {
+                string newName = st->getWriteDataSpace(j);
+                newName.erase(newName.begin());
+                newName.erase(newName.end() - 1);
+                //std::cout << "the num write space " << st->getWriteDataSpace(j) << std::endl;
+
+               string es = st->getExecutionSchedule()->getString();
+               string new_es;
+               std::regex rgx("(.*),(.*)](.*)", std::regex::extended);
+               std::smatch matches;
+
+                if (std::regex_search(es, matches, rgx)) {
+                    new_es = matches[1].str()+',';
+                    new_es = new_es + std::to_string((stoi(matches[2])+1)) ;
+                    new_es = new_es + ']'+ matches[3].str();
+                }
+                if(new_es.empty()){
+                    new_es = es;
+                }
+                //std::cout << " the updated es  " << new_es << std::endl;
+                Stmt *phi = new Stmt(
+                        "phi",
+                        st->getIterationSpace()->getString(),
+                        new_es,
+                        {{newName, "{[0]->[0]}"}},
+                        {{newName, "{[0]->[0]}"}}
+                );
+                phi->setPhiNode(true);
+                comp->addStmt(phi);
+            }
+        }
+    }
+
 
     // rename all the phi nodes variables and statements
     rename(comp);
