@@ -50,6 +50,7 @@ namespace iegenlib {
 
 	struct StmtNode {
         bool isPhiNode;
+        bool isDefPhi;
 		int id = -1;
 		int subgraph = 0;
 		std::string setStr = "", debugStr = "";

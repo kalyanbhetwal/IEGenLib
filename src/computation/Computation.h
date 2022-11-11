@@ -530,6 +530,9 @@ class Stmt {
     bool isArrayAccess() const { return arrayAccess; }
     void setArrayAccess(bool val) { arrayAccess = val; };
 
+    bool isDefPhi() const { return defPhi; }
+    void setDefPhi(bool val) { defPhi = val; };
+
     //! Check if this Stmt has its data spaces delimited already
     bool isDelimited() const { return delimited; }
     //! Mark that this Stmt's data spaces have been delimited
@@ -542,6 +545,7 @@ class Stmt {
    private:
     //! Is the statement a phi node or array access
     bool phiNode = false, arrayAccess = false;
+    bool defPhi = false;
     //! Debug string
     std::vector<string> debug;
     //! Source code of the statement, for debugging purposes

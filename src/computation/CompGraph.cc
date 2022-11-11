@@ -99,8 +99,11 @@ namespace iegenlib {
 
 	void StmtNode::toDotString(std::ostringstream& os) const {
 		std::ostringstream label;
-        if(isPhiNode){
-            label << setStr << "\\nPHI" << id;
+        if(isPhiNode && isDefPhi){
+            label << setStr << "\\nDefφ" << id;
+        }
+        else if(isPhiNode && !isDefPhi){
+            label << setStr << "\\nMergeφ" << id;
         }
         else {
             label << setStr << "\\nS" << id;
@@ -234,6 +237,7 @@ namespace iegenlib {
 			Stmt* stmt = comp->getStmt(i);
 			auto stmtNode = std::make_shared<StmtNode>();
             stmtNode->isPhiNode = stmt->isPhiNode();
+            stmtNode->isDefPhi = stmt -> isDefPhi();
 			stmtNode->id = i;
 			for (int j = 0; j < stmt->getNumReads(); j++) {
 				std::string read =

@@ -290,14 +290,19 @@ void SSA::renameSSA(Computation* comp){
                         {{newName, "{[0]->[0]}"}}
                 );
                 phi->setPhiNode(true);
+                phi->setDefPhi(true);
                 comp->addStmt(phi);
             }
         }
     }
-
-
     // rename all the phi nodes variables and statements
     rename(comp);
+    //SSA::Member::predecessor={};
+    Node* n = createScheduleTree(comp);
+
+    n->calc_all_pred();
+   // n->printPredDom();
+    n->calc_all_backward_paths();
 
     for (int b = 0; b < comp->getNumStmts(); b++) {
         Stmt *s1;
@@ -309,35 +314,44 @@ void SSA::renameSSA(Computation* comp){
             test.erase(test.end()-1);
             test = test + '_';
 
-            if( s1->isPhiNode()){
-
-                if(readLoc.find(read)==readLoc.end()){
-                    continue;
+            if(s1->isDefPhi()){
+                std::vector<Stmt*> s;
+                s = SSA::Member::possiblePaths[s1];
+               // std:: cout << "the stmt "<< s1->getExecutionSchedule()->prettyPrintString() <<std::endl;
+                for(auto x: s){
+                    if(!x->isPhiNode()) continue;
+                    for (int j = 0; j < x->getNumWrites(); j++){
+                        if(x->getWriteDataSpace(j).find(test)!= std::string::npos){
+                            s1->addRead(x->getWriteDataSpace(j),"{[0]->[0]}");
+                            break;
+                        }
+                    }
+                  //  std::cout << "reads " << x->getExecutionSchedule()->prettyPrintString() <<std::endl;
                 }
-                std::map<Stmt *, std::vector<Stmt *>> read_locations = readLoc[read];
+                //s1->removeReadDataSpace(0);
+                //std::cout <<"-----------------------"<<std::endl;
+            }
+            if( s1->isPhiNode() && !s1->isDefPhi()){
+                std::vector<Stmt*> slist;
+                Stmt * actualS = phi_to_stmt[s1];
+                slist = SSA::Member::predecessor[actualS];
+                std::cout <<"-----------------------"<<std::endl;
+                //std:: cout << "the stmt "<< s1->getExecutionSchedule()->prettyPrintString() <<std::endl;
+                for(auto v: slist){
+                    if(!v->isPhiNode()) continue;
+                    //std::cout << "reads " << v->getExecutionSchedule()->prettyPrintString() <<std::endl;
 
-                if(phi_to_stmt.find(s1)!=phi_to_stmt.end()){
-                    Stmt* st = phi_to_stmt[s1];
-
-                    // update read of the statement
-                    if(read_locations.find(st)!=read_locations.end()){
-                        std::vector<Stmt*> r = read_locations[st];
-
-                        for(auto v: r){
-                            for (int j = 0; j < v->getNumWrites(); j++){
-                                if(v->getWriteDataSpace(j).find(test)!= std::string::npos){
-                                    s1->addRead(v->getWriteDataSpace(j),"{[0]->[0]}");
-                                    break;
-                                }
-                            }
+                    for (int j = 0; j < v->getNumWrites(); j++){
+                        if(v->getWriteDataSpace(j).find(test)!= std::string::npos){
+                            s1->addRead(v->getWriteDataSpace(j),"{[0]->[0]}");
+                            break;
                         }
                     }
                 }
                 s1->removeReadDataSpace(0);
             }
-                // trying to edit reads on complementary node of phi node
+            // trying to edit reads on complementary node of phi node
             else if(readLoc[read].find(s1)!=readLoc[read].end()){
-
                 Stmt * s_phi = stmt_to_phi[s1];
                 for (int l = 0; l < s1->getNumReads(); l++){
                     if(s1->getReadDataSpace(l)==read){
@@ -564,7 +578,6 @@ void SSA::Member::calc_all_backward_path(Node * n){
         std::vector<Stmt*> rduplicates;
 
         rduplicates  = possiblePaths[stmt];
-
 
         for (int i = 0; i < stmtList.size(); i++) {
             if(stmtList[i]== stmt){
