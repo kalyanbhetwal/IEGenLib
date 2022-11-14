@@ -451,15 +451,15 @@ TEST(SSATest, MTTKRP){
     mttkrp.addDataSpace("A","double*");
     mttkrp.addDataSpace("B","double*");
     mttkrp.addDataSpace("C","double*");
-    Stmt *s = new Stmt("x=1", "{[i,j,k,r] : 0 <= i < I and 0<=j<J and 0<=k<K and 0<=r<R}",
+    Stmt *s0 = new Stmt("x=1", "{[i,j,k,r] : 0 <= i < I and 0<=j<J and 0<=k<K and 0<=r<R}",
                        "{[i,j,k,r]->[0,i,0,j,0,k,0,r,0]}",
                        {},
                        { {"A", "{[i,k,l,j]->[i,j]}"},
                          {"B", "{[i,k,l,j]->[i,k,l]}"},
                          {"D", "{[i,k,l,j]->[l,j]}"},
                          {"C", "{[i,k,l,j]->[k,j]}"}});
-    mttkrp.addStmt(s);
-    Stmt *s0 = new Stmt("A(i,r) += X(i,j,k)*B(j,r)*C(k,r)",
+    mttkrp.addStmt(s0);
+    Stmt *s1 = new Stmt("A(i,r) += X(i,j,k)*B(j,r)*C(k,r)",
                         "{[i,j,k,r] : 0 <= i < I and 0<=j<J and 0<=k<K and 0<=r<R}",
                         "{[i,j,k,r]->[1,i,0,j,0,k,0,r,0]}",
                         {
@@ -474,7 +474,7 @@ TEST(SSATest, MTTKRP){
                                 {"A", "{[i,k,l,j]->[i,j]}"},
                         });
 
-    mttkrp.addStmt(s0);
+    mttkrp.addStmt(s1);
     Stmt *s2 = new Stmt("x=2", "{[0]}", "{[0]->[2]}",{},{});
     mttkrp.addStmt(s2);
 
@@ -487,13 +487,13 @@ TEST(SSATest, MTTKRP){
     mttkrp_sps.addDataSpace("A","double*");
     mttkrp_sps.addDataSpace("B","double*");
     mttkrp_sps.addDataSpace("C","double*");
-    Stmt *s1 = new Stmt("A(x,i,j,k,r) += X(x,i,j,k,r)*B(x,i,j,k,r)*C(x,i,j,k,r)",
+    Stmt *s11 = new Stmt("A(x,i,j,k,r) += X(x,i,j,k,r)*B(x,i,j,k,r)*C(x,i,j,k,r)",
                         "{[x,i,j,k,r] :  0<=x< NNZ and i=UFi(x) and j=UFj(x) and k=UFk(x) and 0<=r<R}",
                         "{[x,i,j,k,r]->[0,x,0,i,0,j,0,k,0,r,0]}",
                         dataReads,
                         dataWrites);
 
-    mttkrp_sps.addStmt(s1);
+    mttkrp_sps.addStmt(s11);
 
 
     //Calling
@@ -653,4 +653,38 @@ TEST(SSATest, DISABLED_Parflowio){
 
 }
 
+TEST(SSATest, SSARenameExample) {
+
+    Computation * comp = new Computation();
+    comp->addDataSpace("x", "int");
+
+    comp->addStmt(new Stmt (
+            "x(i) = 1;",
+            "{[i]:0 <=i<N}",
+            "{[i]->[0,i,0]}",
+            {},
+            {{"x", "{[i]->[i]}"}}
+    ));
+
+
+    comp->addStmt(new Stmt (
+            "x(i) = 2;",
+            "{[i]:0 <=i<N}",
+            "{[i]->[1,i,0]}",
+            {},
+            {{"x", "{[i]->[i]}"}}
+    ));
+
+    comp->addStmt(new Stmt (
+            "",
+            "{[i]:0 <=i<N}",
+            "{[i]->[1,i,1]}",
+            {{"x", "{[i]->[i]}"}},
+            {}
+    ));
+
+    comp->finalize();
+    std:: cout << comp->toDotString();
+
+}
 

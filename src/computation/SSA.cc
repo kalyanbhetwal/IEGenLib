@@ -222,6 +222,7 @@ void SSA::renameSSA(Computation* comp){
             Stmt* mp = SSA::Member::predecessor[missingRead->first].back();
 
             if(std::find(missingRead->second.begin(), missingRead->second.end(),mp ) == missingRead->second.end()){
+                std::cout << "adding missing read"<<std::endl;
                 phiLoc[missingRead->first].push_back(mp);
             }
 
@@ -234,12 +235,14 @@ void SSA::renameSSA(Computation* comp){
             for(auto i:phis->second){
                 for (int j = 0; j < i->getNumWrites(); j++){
                     if(i->getWriteDataSpace(j)==it->first){
+                        std::cout << "the stmt "<< i->getExecutionSchedule()->prettyPrintString() <<std::endl;
                         count= count + 1;
                         break;
                     }
                 }
             }
             if(count<2)continue;
+            std::cout << "the count is " << count<<std::endl;
             Stmt *phi = new Stmt(
                     "phi",
                     phis->first->getIterationSpace()->getString(),
@@ -281,7 +284,7 @@ void SSA::renameSSA(Computation* comp){
                 if(new_es.empty()){
                     new_es = es;
                 }
-                //std::cout << " the updated es  " << new_es << std::endl;
+                std::cout << " the updated es  " << new_es << std::endl;
                 Stmt *phi = new Stmt(
                         "phi",
                         st->getIterationSpace()->getString(),
@@ -317,18 +320,18 @@ void SSA::renameSSA(Computation* comp){
             if(s1->isDefPhi()){
                 std::vector<Stmt*> s;
                 s = SSA::Member::possiblePaths[s1];
-               // std:: cout << "the stmt "<< s1->getExecutionSchedule()->prettyPrintString() <<std::endl;
+               std:: cout << "the stmt "<< s1->getExecutionSchedule()->prettyPrintString() <<std::endl;
                 for(auto x: s){
-                    if(!x->isPhiNode()) continue;
+                    std::cout << "reads " << x->getExecutionSchedule()->prettyPrintString() <<std::endl;
+                    if(!x->isPhiNode() && s.size()>1) continue;
                     for (int j = 0; j < x->getNumWrites(); j++){
                         if(x->getWriteDataSpace(j).find(test)!= std::string::npos){
                             s1->addRead(x->getWriteDataSpace(j),"{[0]->[0]}");
                             break;
                         }
                     }
-                  //  std::cout << "reads " << x->getExecutionSchedule()->prettyPrintString() <<std::endl;
                 }
-                //s1->removeReadDataSpace(0);
+                s1->removeReadDataSpace(0);
                 //std::cout <<"-----------------------"<<std::endl;
             }
             if( s1->isPhiNode() && !s1->isDefPhi()){
@@ -431,8 +434,10 @@ void SSA::Node::computeDF() {
                 while (runner->getExecutionSchedule()->toString() != it->second[it->second.size() -1]->getExecutionSchedule()->toString()) {
                     //std:: cout << "p   "<< it->first->getExecutionSchedule()->prettyPrintString()<<std::endl;
                    // std:: cout << "r  "<< runner->getExecutionSchedule()->prettyPrintString()<<std::endl;
-                    Node::DF[runner].push_back((Stmt*)it->first);
-                    runner = (Stmt*)Member::predecessor[runner][Member::predecessor[runner].size()-1];
+                   if(runner!=it->first) {
+                       Node::DF[runner].push_back(it->first);
+                   }
+                    runner = Member::predecessor[runner][Member::predecessor[runner].size()-1];
                 }
                 //std::cout <<"-----------------------------------------------"<<std::endl;
             }
