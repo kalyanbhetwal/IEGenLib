@@ -185,11 +185,11 @@ void SSA::rename(Computation * comp){
             s->replaceWrite(write,  newWrite);
         }
         counter++;
-
     }
 }
 
 void SSA::renameSSA(Computation* comp){
+    Computation* phiComp = new Computation();
     std::map<string, std::vector<Stmt*>>::iterator it;
     std::map<string,  std::map<Stmt *, std::vector<Stmt *>>> readLoc;
     std::map<Stmt* , Stmt*> phi_to_stmt;
@@ -222,7 +222,7 @@ void SSA::renameSSA(Computation* comp){
             Stmt* mp = SSA::Member::predecessor[missingRead->first].back();
 
             if(std::find(missingRead->second.begin(), missingRead->second.end(),mp ) == missingRead->second.end()){
-                std::cout << "adding missing read"<<std::endl;
+                //std::cout << "adding missing read"<<std::endl;
                 phiLoc[missingRead->first].push_back(mp);
             }
 
@@ -235,14 +235,14 @@ void SSA::renameSSA(Computation* comp){
             for(auto i:phis->second){
                 for (int j = 0; j < i->getNumWrites(); j++){
                     if(i->getWriteDataSpace(j)==it->first){
-                        std::cout << "the stmt "<< i->getExecutionSchedule()->prettyPrintString() <<std::endl;
+                       // std::cout << "the stmt "<< i->getExecutionSchedule()->prettyPrintString() <<std::endl;
                         count= count + 1;
                         break;
                     }
                 }
             }
             if(count<2)continue;
-            std::cout << "the count is " << count<<std::endl;
+            //std::cout << "the count is " << count<<std::endl;
             Stmt *phi = new Stmt(
                     "phi",
                     phis->first->getIterationSpace()->getString(),
@@ -251,7 +251,7 @@ void SSA::renameSSA(Computation* comp){
                     {{newName, "{[0]->[0]}"}}
             );
             phi->setPhiNode(true);
-            comp->addStmt(phi);
+            phiComp->addStmt(phi);
             //TODO:replace with multimap
             phi_to_stmt[phi] = phis->first;
             stmt_to_phi[phis->first] = phi;
@@ -261,7 +261,9 @@ void SSA::renameSSA(Computation* comp){
 
     }
     //insert definition phis at certain locations
-
+    std::map<Stmt *, Stmt *> merge_to_stmt;
+    std::map<Stmt *, Stmt *> stmt_to_merge;
+    std::map<string,  std::map<Stmt *, Stmt *>> globalsMap;
     for(int k=0; k<comp->getNumStmts(); k++){
         Stmt * st = comp->getStmt(k);
         if(!st->isPhiNode()){
@@ -284,7 +286,7 @@ void SSA::renameSSA(Computation* comp){
                 if(new_es.empty()){
                     new_es = es;
                 }
-                std::cout << " the updated es  " << new_es << std::endl;
+                //std::cout << " the updated execution schedule  " << new_es << std::endl;
                 Stmt *phi = new Stmt(
                         "phi",
                         st->getIterationSpace()->getString(),
@@ -292,20 +294,32 @@ void SSA::renameSSA(Computation* comp){
                         {{newName, "{[0]->[0]}"}},
                         {{newName, "{[0]->[0]}"}}
                 );
+
                 phi->setPhiNode(true);
                 phi->setDefPhi(true);
-                comp->addStmt(phi);
+                phiComp->addStmt(phi);
+                merge_to_stmt[phi] = st;
+                stmt_to_merge[st] = phi;
+                globalsMap[st->getWriteDataSpace(j)].insert(std::make_pair(st,phi ));
             }
+
         }
     }
+
+    //SSA::Member::predecessor={};
+    Node* n = createScheduleTree(phiComp);
+    n->calc_all_pred();
+    //n->printPredDom();
+    n->calc_all_backward_paths();
+
+    for (int b = 0; b < phiComp->getNumStmts(); b++) {
+        Stmt *s1;
+        s1 = phiComp->getStmt(b);
+        comp->addStmt(s1);
+    }
+
     // rename all the phi nodes variables and statements
     rename(comp);
-    //SSA::Member::predecessor={};
-    Node* n = createScheduleTree(comp);
-
-    n->calc_all_pred();
-   // n->printPredDom();
-    n->calc_all_backward_paths();
 
     for (int b = 0; b < comp->getNumStmts(); b++) {
         Stmt *s1;
@@ -320,25 +334,29 @@ void SSA::renameSSA(Computation* comp){
             if(s1->isDefPhi()){
                 std::vector<Stmt*> s;
                 s = SSA::Member::possiblePaths[s1];
-               std:: cout << "the stmt "<< s1->getExecutionSchedule()->prettyPrintString() <<std::endl;
+                //std:: cout << "the stmt "<< s1->getExecutionSchedule()->prettyPrintString() <<std::endl;
+                s.push_back(merge_to_stmt[s1]);
+                bool flag = false;
                 for(auto x: s){
-                    std::cout << "reads " << x->getExecutionSchedule()->prettyPrintString() <<std::endl;
-                    if(!x->isPhiNode() && s.size()>1) continue;
+                    //std::cout << "reads " << x->getExecutionSchedule()->prettyPrintString() <<std::endl;
+                    //if(!x->isPhiNode()) continue;
                     for (int j = 0; j < x->getNumWrites(); j++){
                         if(x->getWriteDataSpace(j).find(test)!= std::string::npos){
+                            flag = true;
                             s1->addRead(x->getWriteDataSpace(j),"{[0]->[0]}");
                             break;
                         }
                     }
                 }
-                s1->removeReadDataSpace(0);
+               //std::cout <<"-----------------------"<<std::endl;
+                if(flag)s1->removeReadDataSpace(0);
                 //std::cout <<"-----------------------"<<std::endl;
             }
             if( s1->isPhiNode() && !s1->isDefPhi()){
                 std::vector<Stmt*> slist;
                 Stmt * actualS = phi_to_stmt[s1];
                 slist = SSA::Member::predecessor[actualS];
-                std::cout <<"-----------------------"<<std::endl;
+                //std::cout <<"-----------------------"<<std::endl;
                 //std:: cout << "the stmt "<< s1->getExecutionSchedule()->prettyPrintString() <<std::endl;
                 for(auto v: slist){
                     if(!v->isPhiNode()) continue;
@@ -362,31 +380,36 @@ void SSA::renameSSA(Computation* comp){
                         break;
                     }
                 }
-
+                s1->removeReadDataSpace(0);
             }
             else{
+                if(s1->isPhiNode())continue;
                 std::vector<Stmt*> pred= SSA::Member::predecessor[s1];
-                //std::cout << " the pred size is "<< pred.size()<<std::endl;
+                //std::cout << "the pred size is "<< pred.size()<<std::endl;
                 if(pred.size()>0){
                     Stmt* s_pred = pred[0];
-                    //std::cout << " ----- pred list---------- " <<  s_pred->prettyPrintString();
-                    //std::cout << " ----- stmt list---------- " <<  s1 ->prettyPrintString();
+                    if(globalsMap.find(read)!= globalsMap.end()){
+                        s_pred = globalsMap[read][s_pred];
+                    }
+
+                    //Stmt* s_pred = stmt_to_merge[ppred];
+                    //std::cout << " ----- pred list---------- " <<  s_pred->getExecutionSchedule()->prettyPrintString()<<std::endl;
+                    //std::cout << " ----- stmt list---------- " <<  s1->getExecutionSchedule() ->prettyPrintString()<<std::endl;
                     int k;
                     bool match = false;
                     for ( k = 0; k < s_pred->getNumWrites(); k++){
-                        // std:: cout << s_pred->getWriteDataSpace(k) << "   sb  "<< test <<std::endl;
-
+                        //std:: cout << s_pred->getWriteDataSpace(k) << "   sb  "<< test <<std::endl;
                         if(s_pred->getWriteDataSpace(k).find(test)!= std::string::npos){
                             match = true;
                             break;
                         }
                     }
-                    // std::cout << "the value of k is "<< k << std::endl;
+                   // std::cout << "the value of k is "<< k << std::endl;
                     if( s_pred->getNumWrites()>0 and match) {
                         for (int l = 0; l < s1->getNumReads(); l++) {
-                            //std:: cout << s1->getReadDataSpace(l) << "  tttttt   "<< test <<std::endl;
+                           // std:: cout << s1->getReadDataSpace(l) << "  tttyyyttt   "<< test <<std::endl;
                             if (s1->getReadDataSpace(l) == read) {
-                                // std:: cout << s1->getReadDataSpace(l) << "  t  "<< s_pred->getWriteDataSpace(k) << "  the test is " << test<<std::endl;
+                                //std:: cout << s1->getReadDataSpace(l) << "  t  "<< s_pred->getWriteDataSpace(k) << "  the test is " << test<<std::endl;
                                 s1->replaceReadDataSpace(s1->getReadDataSpace(l), s_pred->getWriteDataSpace(k));
                                 break;
                             }

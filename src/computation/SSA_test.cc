@@ -475,30 +475,11 @@ TEST(SSATest, MTTKRP){
                         });
 
     mttkrp.addStmt(s1);
-    Stmt *s2 = new Stmt("x=2", "{[0]}", "{[0]->[2]}",{},{});
-    mttkrp.addStmt(s2);
+//    Stmt *s2 = new Stmt("x=2", "{[0]}", "{[0]->[2]}",{},{});
+//    mttkrp.addStmt(s2);
 
     mttkrp.finalize();
     std:: cout << mttkrp.toDotString();
-
-    // this one is COO
-    Computation mttkrp_sps;
-    mttkrp_sps.addDataSpace("X","double*");
-    mttkrp_sps.addDataSpace("A","double*");
-    mttkrp_sps.addDataSpace("B","double*");
-    mttkrp_sps.addDataSpace("C","double*");
-    Stmt *s11 = new Stmt("A(x,i,j,k,r) += X(x,i,j,k,r)*B(x,i,j,k,r)*C(x,i,j,k,r)",
-                        "{[x,i,j,k,r] :  0<=x< NNZ and i=UFi(x) and j=UFj(x) and k=UFk(x) and 0<=r<R}",
-                        "{[x,i,j,k,r]->[0,x,0,i,0,j,0,k,0,r,0]}",
-                        dataReads,
-                        dataWrites);
-
-    mttkrp_sps.addStmt(s11);
-
-
-    //Calling
-//    std::cout << "Codegen:\n";
-//    std::cout << mttkrp_sps.codeGen();
 
     EXPECT_EQ("1","1");
 
@@ -684,6 +665,7 @@ TEST(SSATest, SSARenameExample) {
     ));
 
     comp->finalize();
+    //std::cout <<"------------------------------------------"<<std::endl;
     std:: cout << comp->toDotString();
 
 }
