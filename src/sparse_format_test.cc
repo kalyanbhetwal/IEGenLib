@@ -85,7 +85,7 @@ TEST_F (SparseFormatTest, COO_DENSE_COMPOSE){
                                "&& 0 <= n2 && n2 < NNZ }");
   Relation *result = coo_inv->Compose(dense);
 
-  EXPECT_EQ ("{ [n1] -> [n2] : n1 - 9 rowcol_inv(n2, ) - rowcol_inv(n2, 1) = 0 && n2 >= 0 && -n2 + NNZ - 1 >= 0 }"
+  EXPECT_EQ ("{ [n1] -> [n2] : n1 - 9 rowcol_inv(n2, 0) - rowcol_inv(n2, 1) = 0 && n2 >= 0 && -n2 + NNZ - 1 >= 0 }"
 		  ,result->prettyPrintString());
 
 }

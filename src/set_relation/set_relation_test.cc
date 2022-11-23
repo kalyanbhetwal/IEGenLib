@@ -4997,7 +4997,7 @@ TEST_F(SetRelationTest, TupleBoundsTest){
     EXPECT_EQ("NR",(*upperBounds.begin())->
 		    prettyPrintString(domain->getTupleDecl()));
 
-    EXPECT_EQ("",(*lowerBounds.begin())->
+    EXPECT_EQ("0",(*lowerBounds.begin())->
 		    prettyPrintString(domain->getTupleDecl()));
 }
 

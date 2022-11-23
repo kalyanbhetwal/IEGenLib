@@ -974,6 +974,7 @@ std::string Exp::toString(bool generic) const {
 std::string
 Exp::prettyPrintString(const TupleDecl & aTupleDecl) const
 {
+    if(mTerms.size() == 0) return "0";
     std::string result;
     bool firstTerm = true;
     for (std::list<Term*>::const_iterator i=mTerms.begin();
