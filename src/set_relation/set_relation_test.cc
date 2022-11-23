@@ -4943,21 +4943,24 @@ TEST_F(SetRelationTest,CONVEX_HULL){
     EXPECT_EQ("{ [i, j] -> [n] }",hullRel->prettyPrintString());  
 }
 
-TEST_F(SetRelationTest,DISABLED_ParseOmegaString){
+TEST_F(SetRelationTest,ParseOmegaString){
     
     Set * rel = new Set(
-	     "{[i,j,k]: A(i,j) > 0 and rowptr(i) <= k"
+	     "{[i,j,k]: A(i,j) > 0 and size_off(off) = NR "
+	     "and rowptr(i) <= k"
 	     " and k < rowptr(i+ 1) and col(k) =j and 0 <= i"
 	     " and i < NR and 0 <= j and j < NC}");
     VisitorChangeUFsForOmega visitor;
     rel->acceptVisitor(&visitor);
     std::string omegaString = rel->toOmegaString(visitor.getUFCallDecls());
+    std::cerr << omegaString << "\n";
     omega::Relation* omegaRel = omega::parser::ParseRelation(omegaString);
     std::string constraintString = omegaRel->print_with_subs_to_string();
-    Relation* result = 
-	    Relation::parseOmegaString(constraintString,visitor.getUFMap());
 
-    EXPECT_EQ("",result->prettyPrintString());
+    EXPECT_EQ("{[i,j,k]: col_0(i,j,k) = j && size_off_off_"
+	      " = NR && rowptr_1(i) <= k < rowptr_3(i) &&"
+	      " 0 <= i < NR && 0 <= j < NC && 1 <= A_2(i,j)}\n",
+	      constraintString);
 }
 
 TEST_F(SetRelationTest, SymbolIterator) {

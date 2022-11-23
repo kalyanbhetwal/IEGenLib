@@ -1,4 +1,5 @@
 #include "VisitorChangeUFsForOmega.h"
+#include <util/util.h>
 namespace  iegenlib{
 /* VisitorChangeUFsForOmega */
 
@@ -13,6 +14,10 @@ void VisitorChangeUFsForOmega::reset() {
     nextFuncReplacementNumber = 0;
     currentTupleDecl = NULL;
     for(auto uf : ufMap) { delete uf.second;}
+    for(auto ufM : ufVarTermMap) {
+        delete ufM.second;
+    }
+    ufVarTermMap.clear();
     ufMap.clear();
 }
 
@@ -95,6 +100,25 @@ void VisitorChangeUFsForOmega::preVisitConjunction(Conjunction* c){
     }
 }
 
+void VisitorChangeUFsForOmega::postVisitExp(iegenlib::Exp* e){
+    // Here we replace every term that has a ufcallterm
+    // that does not depend on tuple variables with their
+    // equivalent Variable Term
+    for(Term* term : e->getTermList()){
+        if (term->isUFCall() && ufVarTermMap[((UFCallTerm*)term)]){
+	    auto varTerm = (VarTerm*)ufVarTermMap[((UFCallTerm*)term)]->clone();
+	    varTerm->setCoefficient(term->coefficient());
+	    e->addTerm(varTerm->clone());
+	    // Remove the ufcallTerm by adding a a new term with 
+	    // negative coefficient
+	    UFCallTerm* ut = (UFCallTerm*)term->clone();
+	    ut->setCoefficient(- ut->coefficient());
+	    e->addTerm(ut);
+        }
+        
+    }
+}
+
 void VisitorChangeUFsForOmega::preVisitExp(iegenlib::Exp * e){
     if(e->isEquality() && !e->hasUFCall()){
 	std::list<Term*> terms = e->getTermList();
@@ -164,13 +188,6 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
             }
         }
     }
-    // ensure presence of at least one tuple var (UF calls cannot be
-    // constant-only)
-    if (max_tvloc == -1) {
-        throw assert_exception(
-            "Cannot make UF calls with only constant arguments");
-    }
-
     // save original coefficient, then temporarily modify for printing
     int originalCoefficient = callTerm->coefficient();
     callTerm->setCoefficient(1);
@@ -184,6 +201,36 @@ void VisitorChangeUFsForOmega::postVisitUFCallTerm(UFCallTerm* callTerm) {
 
     std::string originalUFString = callTerm->toString();
     std::string originalCall = callTerm->toString();
+    
+    
+    
+    //  UF Calls can have constants and the whole
+    // uf call should be replaced by a constant. This is 
+    
+    if (max_tvloc == -1) {
+        // We need to change the UfCallTerm to a VarTerm,
+	// so that constant parameterized uf functions can
+	// be modelled.
+	std::string varName = callTerm->toString();
+	// Remove ( and ) and replace with underscore
+        varName = replaceInString(varName, ")","_");
+        varName = replaceInString(varName, "(","_");
+        varName = replaceInString(varName, ",","_");
+        varName = replaceInString(varName, "+","_");
+        varName = replaceInString(varName, " ","_");
+        varName = replaceInString(varName, "-","_");
+
+	VarTerm* varTerm = 
+		new VarTerm(1,varName);
+        ufVarTermMap[callTerm] = varTerm;
+        // this is a new UF, so add a macro definition for it
+        macros.emplace(varTerm->toString(), callTerm->toString());
+	ufMap.emplace(varName,
+			dynamic_cast<UFCallTerm*>(callTerm->clone()));
+	callTerm->setCoefficient(originalCoefficient);
+	return;
+    }
+
     
     
     UFCallTerm* originalTerm =(UFCallTerm*) callTerm->clone(); 
@@ -268,8 +315,31 @@ void VisitorChangeOmegaUF::postVisitUFCallTerm(UFCallTerm* callTerm) {
         *callTerm = (*it->second);
     }
 }
+void VisitorChangeOmegaUF::postVisitExpTerm(Exp* e){
+    //Here we replace VarTerms that exist in the expression
+    //with its equivalent ufcallterm
+    for(Term* term : e->getTermList()){
+        VarTerm* varT = dynamic_cast<VarTerm*>(term);
+	if (varT && ufMap[varT->symbol()]){
+            // Add the original ufcallterm 
+	    UFCallTerm* ut = (UFCallTerm*)term->clone();
+	    ut->setCoefficient(varT->coefficient());
+	    
+	    // Set the coefficient of the varraiable term 
+	    // to zero to delete it from the equation
+	    Term* t = varT->clone();
+	    t->setCoefficient(-varT->coefficient());
+	    e->addTerm(t);
+	    e->addTerm(ut);
+        }
+        
+    }
+}
+
 
 void FlattenUFNestingVisitor::postVisitConjunction(Conjunction* c){
+    // Replace every UFCallTerm with var term equivalent 
+
     if(flatUfTupleMap.size()!= 0){
         
 	for(int i = 0; i <  flatUfTupleMap.size() ; ++i){

@@ -54,6 +54,16 @@ class VisitorChangeUFsForOmega : public Visitor {
     // Final Set: {[n,t1,k]
     std::vector<std::pair<UFCallTerm*,int>> flatUfTupleMap;
     
+    // Map gives information about UFs that will 
+    // be downgraded to variable term.
+    // The reason why we need this downgrade is for 
+    // situations where the ufCallTerm has constants
+    // as parameters. For instance size_of(off), size_of
+    // function has a constant varible term, and omega 
+    // would not support codegen for this. So we can 
+    // downgrade UFCallTerm for size_of to a var term
+    // size_of_off.
+    std::map<UFCallTerm*,VarTerm*> ufVarTermMap;    
 
     // This contains a list of 
     // new tuple locations created 
@@ -125,6 +135,8 @@ class VisitorChangeUFsForOmega : public Visitor {
     
     void preVisitExp(iegenlib::Exp * e);
     
+    void postVisitExp(iegenlib::Exp* e);
+    
     void postVisitSet(iegenlib::Set*);
 
     void preVisitRelation(iegenlib::Relation*);
@@ -145,6 +157,7 @@ public:
     explicit VisitorChangeOmegaUF(std::map<std::string,UFCallTerm*> ufMap):
 	   ufMap(ufMap){} 
     void postVisitUFCallTerm(UFCallTerm*);
+    void postVisitExpTerm(Exp *e);
 };	
 
 /**
