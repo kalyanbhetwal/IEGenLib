@@ -313,6 +313,7 @@ void SSA::renameSSA(Computation* comp){
     n->calc_all_backward_paths();
 
     for (int b = 0; b < phiComp->getNumStmts(); b++) {
+        //std::cout<<"the num of statement" <<b<<std::endl;
         Stmt *s1;
         s1 = phiComp->getStmt(b);
         comp->addStmt(s1);
@@ -322,6 +323,7 @@ void SSA::renameSSA(Computation* comp){
     rename(comp);
 
     for (int b = 0; b < comp->getNumStmts(); b++) {
+       // std::cout<<"#no stmt " <<b <<std::endl;
         Stmt *s1;
         s1 = comp->getStmt(b);
 
@@ -334,6 +336,7 @@ void SSA::renameSSA(Computation* comp){
             if(s1->isDefPhi()){
                 std::vector<Stmt*> s;
                 s = SSA::Member::possiblePaths[s1];
+                //std::cout<< "var "<<s1->getWriteDataSpace(0)<<std::endl;
                 //std:: cout << "the stmt "<< s1->getExecutionSchedule()->prettyPrintString() <<std::endl;
                 s.push_back(merge_to_stmt[s1]);
                 bool flag = false;
@@ -349,7 +352,8 @@ void SSA::renameSSA(Computation* comp){
                     }
                 }
                //std::cout <<"-----------------------"<<std::endl;
-                if(flag)s1->removeReadDataSpace(0);
+                if(flag){s1->removeReadDataSpace(0);
+                break;}
                 //std::cout <<"-----------------------"<<std::endl;
             }
             if( s1->isPhiNode() && !s1->isDefPhi()){
@@ -359,8 +363,12 @@ void SSA::renameSSA(Computation* comp){
                 //std::cout <<"-----------------------"<<std::endl;
                 //std:: cout << "the stmt "<< s1->getExecutionSchedule()->prettyPrintString() <<std::endl;
                 for(auto v: slist){
+                    if(globalsMap.find(read)!= globalsMap.end()){
+                        v = globalsMap[read][v];
+                       // std::cout <<"match"<<std::endl;
+                    }
                     if(!v->isPhiNode()) continue;
-                    //std::cout << "reads " << v->getExecutionSchedule()->prettyPrintString() <<std::endl;
+                   // std::cout << "reads " << v->getExecutionSchedule()->prettyPrintString() <<std::endl;
 
                     for (int j = 0; j < v->getNumWrites(); j++){
                         if(v->getWriteDataSpace(j).find(test)!= std::string::npos){
@@ -370,17 +378,22 @@ void SSA::renameSSA(Computation* comp){
                     }
                 }
                 s1->removeReadDataSpace(0);
+                break;
             }
             // trying to edit reads on complementary node of phi node
             else if(readLoc[read].find(s1)!=readLoc[read].end()){
                 Stmt * s_phi = stmt_to_phi[s1];
+                //std::cout << s_phi->getExecutionSchedule()->prettyPrintString()<<std::endl;
                 for (int l = 0; l < s1->getNumReads(); l++){
                     if(s1->getReadDataSpace(l)==read){
+                       // std::cout <<"match"<<std::endl;
+
                         s1->replaceReadDataSpace( s1->getReadDataSpace(l), s_phi->getWriteDataSpace(0));
+                        //std::cout<< "the dataspace " << s1->getReadDataSpace(l)<<std::endl;
                         break;
                     }
                 }
-                s1->removeReadDataSpace(0);
+                //s1->removeReadDataSpace(0);
             }
             else{
                 if(s1->isPhiNode())continue;
@@ -571,10 +584,9 @@ void SSA::Member::calc_all_pred(Node * n){
 
         stmtList = pred_and_dom(n, j - 1);
 
-        std::vector<Stmt*> rduplicates;
+        std::vector<Stmt*> rduplicates{};
 
-        rduplicates  = predecessor[stmt];
-
+        //rduplicates  = predecessor[stmt];
 
         for (int i = 0; i < stmtList.size(); i++) {
             if(stmtList[i]== stmt){
