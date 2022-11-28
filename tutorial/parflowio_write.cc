@@ -2,9 +2,10 @@
 #include <utility>
 #include <fstream>
 #include <iostream>
-
+#define calcOffset(int extent, int block_count, int block_idx) { int lx = extent % block_count; int bx = extent / block_count; int offset =  block_idx * bx; if (block_idx < lx)  offset += block_idx;}else offset += lx;}}
 using iegenlib::Computation;
 using namespace std;
+
 
 int main(int argc, char **argv){
 
@@ -140,7 +141,7 @@ int main(int argc, char **argv){
                         },
             {{"fp", "{[nsg_z, nsg_y, nsg_x]->[0]}"}});
 
-    parflowio_w.addStmt(&s3);
+   // parflowio_w.addStmt(&s3);
 
 
     /*
@@ -158,7 +159,7 @@ int main(int argc, char **argv){
              },
             {{"buf", "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0]}"}});
 
-    parflowio_w.addStmt(&s4);
+   // parflowio_w.addStmt(&s4);
 
 
     /*
@@ -181,7 +182,7 @@ int main(int argc, char **argv){
              {"writeBuf", "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[j]}"}
             });
 
-    parflowio_w.addStmt(&s5);
+    //parflowio_w.addStmt(&s5);
 
 
 
@@ -197,7 +198,7 @@ int main(int argc, char **argv){
                 {"fp", "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0]}"},
              });
 
-    parflowio_w.addStmt(&s6);
+    //parflowio_w.addStmt(&s6);
 
 
 
@@ -213,7 +214,7 @@ int main(int argc, char **argv){
                      {"sg_count", "{[nsg_z, nsg_y, nsg_x]->[sg_count]}"}
             });
 
-    parflowio_w.addStmt(&s7);
+    //parflowio_w.addStmt(&s7);
 
 
 
@@ -227,7 +228,7 @@ int main(int argc, char **argv){
                     {"nsg", "{[nsg_z]->[0]}"}
             });
 
-    parflowio_w.addStmt(&s8);
+    //parflowio_w.addStmt(&s8);
 
     //Calling
     parflowio_w.finalize();

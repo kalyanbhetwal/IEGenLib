@@ -367,6 +367,7 @@ void SSA::renameSSA(Computation* comp){
                         v = globalsMap[read][v];
                        // std::cout <<"match"<<std::endl;
                     }
+                    if(!v)continue; ///TODO:: check why is this happening
                     if(!v->isPhiNode()) continue;
                    // std::cout << "reads " << v->getExecutionSchedule()->prettyPrintString() <<std::endl;
 
@@ -384,6 +385,7 @@ void SSA::renameSSA(Computation* comp){
             else if(readLoc[read].find(s1)!=readLoc[read].end()){
                 Stmt * s_phi = stmt_to_phi[s1];
                 //std::cout << s_phi->getExecutionSchedule()->prettyPrintString()<<std::endl;
+                if(!s_phi)continue; //TODO::check why is this happening
                 for (int l = 0; l < s1->getNumReads(); l++){
                     if(s1->getReadDataSpace(l)==read){
                        // std::cout <<"match"<<std::endl;
@@ -404,7 +406,7 @@ void SSA::renameSSA(Computation* comp){
                     if(globalsMap.find(read)!= globalsMap.end()){
                         s_pred = globalsMap[read][s_pred];
                     }
-
+                    if(!s_pred)continue; //TODO:: check why is this happening
                     //Stmt* s_pred = stmt_to_merge[ppred];
                     //std::cout << " ----- pred list---------- " <<  s_pred->getExecutionSchedule()->prettyPrintString()<<std::endl;
                     //std::cout << " ----- stmt list---------- " <<  s1->getExecutionSchedule() ->prettyPrintString()<<std::endl;
