@@ -50,6 +50,7 @@ std::vector<Set*> SSA::getPrefixes(Set*s) {
     for(int i= tl.size()-1; i>0 ;i--) {
         res = res->projectOut(i);
         v.push_back(res);
+        //std:: cout <<" the extracted set " << res->prettyPrintString()<<std::endl;
     }
     return v;
 }
@@ -200,10 +201,7 @@ void SSA::renameSSA(Computation* comp){
         newName.erase(newName.end() - 1);
         std::map<Stmt *, std::vector<Stmt *>> phiLoc;
         for (int v = 0; v < it->second.size(); v++) {
-
             if (Node::DF.find(it->second[v]) != Node::DF.end()) {
-                //std::cout << "contributing node " << it->second[v]->getExecutionSchedule()->prettyPrintString()
-                //        << std::endl;
                 std::vector<Stmt *> insert_phi_at = Node::DF.at(it->second[v]);
                 for (auto stmt: insert_phi_at) {
 
@@ -213,7 +211,6 @@ void SSA::renameSSA(Computation* comp){
 
                 }
             }
-            // std::cout << "----------------------------------------"<<std::endl;
         }
 
         // if there is direct connection between two nodes or statements
@@ -235,14 +232,13 @@ void SSA::renameSSA(Computation* comp){
             for(auto i:phis->second){
                 for (int j = 0; j < i->getNumWrites(); j++){
                     if(i->getWriteDataSpace(j)==it->first){
-                       // std::cout << "the stmt "<< i->getExecutionSchedule()->prettyPrintString() <<std::endl;
                         count= count + 1;
                         break;
                     }
                 }
             }
             if(count<2)continue;
-            //std::cout << "the count is " << count<<std::endl;
+
             Stmt *phi = new Stmt(
                     "phi",
                     phis->first->getIterationSpace()->getString(),
@@ -260,6 +256,7 @@ void SSA::renameSSA(Computation* comp){
         readLoc[it->first] = phiLoc;
 
     }
+
     //insert definition phis at certain locations
     std::map<Stmt *, Stmt *> merge_to_stmt;
     std::map<Stmt *, Stmt *> stmt_to_merge;
@@ -331,6 +328,7 @@ void SSA::renameSSA(Computation* comp){
             std::string read = s1->getReadDataSpace(j);
             std::string test = read;
             test.erase(test.end()-1);
+
             test = test + '_';
 
             if(s1->isDefPhi()){
@@ -382,14 +380,13 @@ void SSA::renameSSA(Computation* comp){
                 break;
             }
             // trying to edit reads on complementary node of phi node
-            else if(readLoc[read].find(s1)!=readLoc[read].end()){
+            else if(readLoc[read].find(s1)!=readLoc[read].end()     && stmt_to_phi.find(s1)!=stmt_to_phi.end() ){
                 Stmt * s_phi = stmt_to_phi[s1];
                 //std::cout << s_phi->getExecutionSchedule()->prettyPrintString()<<std::endl;
                 if(!s_phi)continue; //TODO::check why is this happening
                 for (int l = 0; l < s1->getNumReads(); l++){
                     if(s1->getReadDataSpace(l)==read){
                        // std::cout <<"match"<<std::endl;
-
                         s1->replaceReadDataSpace( s1->getReadDataSpace(l), s_phi->getWriteDataSpace(0));
                         //std::cout<< "the dataspace " << s1->getReadDataSpace(l)<<std::endl;
                         break;
@@ -401,25 +398,51 @@ void SSA::renameSSA(Computation* comp){
                 if(s1->isPhiNode())continue;
                 std::vector<Stmt*> pred= SSA::Member::predecessor[s1];
                 //std::cout << "the pred size is "<< pred.size()<<std::endl;
-                if(pred.size()>0){
-                    Stmt* s_pred = pred[0];
-                    if(globalsMap.find(read)!= globalsMap.end()){
-                        s_pred = globalsMap[read][s_pred];
+                Stmt *s_pred;
+                if(pred.size()==0)continue;
+                if(pred.size()>1) {
+                    /// if multiple predecessors are writing to same data space then we should throw and exception
+                //    std::cout << "read "<< read<< std::endl;
+                   // std::cout << "stmt " << s1->getExecutionSchedule()->prettyPrintString() << std::endl;
+
+                      //  std::cout <<"pred "<< pred[pred.size()-1]->getExecutionSchedule()->prettyPrintString() << std::endl;
+
+                        if (globalsMap.find(read) != globalsMap.end()) {
+                            if(globalsMap[read].size()>1){
+                              //  std::cout << "------multimap -----"<<std::endl;
+                                s_pred = globalsMap[read][pred[pred.size()-1]];
+                            }else s_pred = globalsMap[read].begin()->second;
+
+
+                            //s_pred = stmt_to_merge[sorg];
+                            //std::cout << "matched  "<< sorg->getExecutionSchedule()->prettyPrintString() << std::endl;
+//                            if (globalsMap[read].find(pred[d]) != globalsMap[read].end()) {
+//                                s_pred = globalsMap[read][pred[d]];
+//                                //std::cout << "matched  "<< pred[d]->getExecutionSchedule()->prettyPrintString() << std::endl;
+//                                //std::cout<<"__________________________________"<<std::endl;
+//                                break;
+//                            }
+                        }
+
+                }else {
+                    if (globalsMap.find(read) != globalsMap.end()) {
+                        if(globalsMap[read].size()>1){
+                            //std::cout << "multimap "<<std::endl;
+                            s_pred = globalsMap[read][pred[0]];
+                        }else s_pred = globalsMap[read].begin()->second;
                     }
+                    //s_pred =stmt_to_merge[pred[0]];
+
+                }
                     if(!s_pred)continue; //TODO:: check why is this happening
-                    //Stmt* s_pred = stmt_to_merge[ppred];
-                    //std::cout << " ----- pred list---------- " <<  s_pred->getExecutionSchedule()->prettyPrintString()<<std::endl;
-                    //std::cout << " ----- stmt list---------- " <<  s1->getExecutionSchedule() ->prettyPrintString()<<std::endl;
                     int k;
                     bool match = false;
                     for ( k = 0; k < s_pred->getNumWrites(); k++){
-                        //std:: cout << s_pred->getWriteDataSpace(k) << "   sb  "<< test <<std::endl;
                         if(s_pred->getWriteDataSpace(k).find(test)!= std::string::npos){
                             match = true;
                             break;
                         }
                     }
-                   // std::cout << "the value of k is "<< k << std::endl;
                     if( s_pred->getNumWrites()>0 and match) {
                         for (int l = 0; l < s1->getNumReads(); l++) {
                            // std:: cout << s1->getReadDataSpace(l) << "  tttyyyttt   "<< test <<std::endl;
@@ -433,27 +456,24 @@ void SSA::renameSSA(Computation* comp){
 
                 }
 
+
             }
         }
 
-//        std:: cout <<"---------------------------------------------------"<< std::endl;
-//        std:: cout << "updated stmt " << s1->prettyPrintString() << std::endl;
-//        std:: cout <<"---------------------------------------------------"<< std::endl;
     }
-}
 
 void SSA::generateSSA(iegenlib::Computation *comp) {
     Node * node = createScheduleTree(comp);
-
     node->calc_all_pred();
 
-    //node->printPredDom();
+    node->printPredDom();
 
     node-> computeDF();
 
     //node->printDF();
 
     SSA::renameSSA(comp);
+
 
 
 }

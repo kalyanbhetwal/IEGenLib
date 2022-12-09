@@ -143,6 +143,11 @@ int main(int argc, char** argv) {
 
     comp->finalize();
 
+    for( int i =0 ; i< comp->getNumStmts() ;i++){
+        std::cout << comp->getStmt(i)->prettyPrintString()<<std::endl;
+    }
+    //std::cout << comp->codeGen();
+    std::cout << std::endl;
     ofstream outStream;
     outStream.open("append_test.c");
     outStream << comp->codeGen();

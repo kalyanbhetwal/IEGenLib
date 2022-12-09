@@ -32,7 +32,7 @@ int forComp3(Computation* c, int i, int idx, int idx2);
 int forComp2(Computation* c, int i, int idx) {
     Computation* cDiffComputation = c_diff_Computation();
     Computation* vDiffComputation = v_diff_Computation();
-    Computation* uDiffComputation = u_diff_Computation();
+    Computation* uDiffComputation = u_diff_Computation();1
 
     std::string n = std::to_string(idx);
 
