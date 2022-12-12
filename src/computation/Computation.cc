@@ -1460,7 +1460,6 @@ void Computation::finalize(bool deleteDeadNodes) {
      adjustExecutionSchedules();
      padExecutionSchedules();
 
-
     if (deleteDeadNodes) {
         std::cerr << "Deleting Dead Nodes" << std::endl;
         deleteDeadStatements();

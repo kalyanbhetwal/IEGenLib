@@ -1010,6 +1010,24 @@ TEST_F(SetRelationTest, ComposeNeedsRenaming) {
     delete expected;
 }
 
+TEST_F(SetRelationTest, Compose) {
+
+    Relation* r1 = new Relation("{ [nsg] -> [1, nsg,2]: 0<= nsg < m_subgrid}");
+    Relation* r2= new Relation("{[x,b,c] -> [x,b,y] : y = c+1}");
+
+    Relation* result = r2->Compose(r1);
+    std::cout << "the result after compose is "<< result->prettyPrintString()<<std::endl;
+    Relation* expected
+            = new Relation("{ [x,z,r] -> [w,t]: w=x+z-r-5 && t=r+2 }");
+    //EXPECT_EQ(expected->toString(), result->toString());
+
+    delete r1;
+    //delete r2;
+    //delete result;
+    delete expected;
+}
+
+
 // Test composition of relations with uninterpreted function calls.
 // Both relations are functions.
 #pragma mark ComposeWithUFC

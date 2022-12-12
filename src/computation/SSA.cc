@@ -270,24 +270,33 @@ void SSA::renameSSA(Computation* comp){
                 newName.erase(newName.end() - 1);
                 //std::cout << "the num write space " << st->getWriteDataSpace(j) << std::endl;
 
-               string es = st->getExecutionSchedule()->getString();
-               string new_es;
-               std::regex rgx("(.*),(.*)](.*)", std::regex::extended);
-               std::smatch matches;
+                std::string a,b;
+                for(int i=0;i< st->getExecutionSchedule()->outArity();i++){
+                    b = 'a'+std::to_string(i)+',';
+                    a +=b;
+                }
 
-                if (std::regex_search(es, matches, rgx)) {
-                    new_es = matches[1].str()+',';
-                    new_es = new_es + std::to_string((stoi(matches[2])+1)) ;
-                    new_es = new_es + ']'+ matches[3].str();
-                }
-                if(new_es.empty()){
-                    new_es = es;
-                }
-                //std::cout << " the updated execution schedule  " << new_es << std::endl;
+
+                a.erase(a.end() - 1);
+                b.erase(b.end() - 1);
+                std::string right = a;
+                right.replace(a.size()-2,2,"c1");
+
+                string relation_string = "{["+a+"] -> ["+right+"] : c1 = "+b+"+1}";
+
+
+                Relation* r2= new Relation(relation_string);
+
+                Relation* r3 = r2->Compose(st->getExecutionSchedule());
+
+                std::cout<<"new execution schedule "<<r3->prettyPrintString() <<std::endl;
+                std::cout<<"new iteration space "<<st->getIterationSpace()->prettyPrintString() <<std::endl;
+
+
                 Stmt *phi = new Stmt(
                         "phi",
-                        st->getIterationSpace()->getString(),
-                        new_es,
+                        st->getIterationSpace()->prettyPrintString(),
+                        r3->prettyPrintString(),
                         {{newName, "{[0]->[0]}"}},
                         {{newName, "{[0]->[0]}"}}
                 );
@@ -301,6 +310,7 @@ void SSA::renameSSA(Computation* comp){
             }
 
         }
+
     }
 
     //SSA::Member::predecessor={};
@@ -398,36 +408,22 @@ void SSA::renameSSA(Computation* comp){
                 if(s1->isPhiNode())continue;
                 std::vector<Stmt*> pred= SSA::Member::predecessor[s1];
                 //std::cout << "the pred size is "<< pred.size()<<std::endl;
-                Stmt *s_pred;
+                Stmt *s_pred = new Stmt();
                 if(pred.size()==0)continue;
                 if(pred.size()>1) {
                     /// if multiple predecessors are writing to same data space then we should throw and exception
-                //    std::cout << "read "<< read<< std::endl;
-                   // std::cout << "stmt " << s1->getExecutionSchedule()->prettyPrintString() << std::endl;
-
-                      //  std::cout <<"pred "<< pred[pred.size()-1]->getExecutionSchedule()->prettyPrintString() << std::endl;
-
                         if (globalsMap.find(read) != globalsMap.end()) {
                             if(globalsMap[read].size()>1){
-                              //  std::cout << "------multimap -----"<<std::endl;
-                                s_pred = globalsMap[read][pred[pred.size()-1]];
-                            }else s_pred = globalsMap[read].begin()->second;
-
-
-                            //s_pred = stmt_to_merge[sorg];
-                            //std::cout << "matched  "<< sorg->getExecutionSchedule()->prettyPrintString() << std::endl;
-//                            if (globalsMap[read].find(pred[d]) != globalsMap[read].end()) {
-//                                s_pred = globalsMap[read][pred[d]];
-//                                //std::cout << "matched  "<< pred[d]->getExecutionSchedule()->prettyPrintString() << std::endl;
-//                                //std::cout<<"__________________________________"<<std::endl;
-//                                break;
-//                            }
+                                s_pred = globalsMap[read][pred[pred.size()-1]]; //reading from the dominator
+                            }else {
+                                s_pred = globalsMap[read].begin()->second;
+                            }
                         }
 
                 }else {
                     if (globalsMap.find(read) != globalsMap.end()) {
                         if(globalsMap[read].size()>1){
-                            //std::cout << "multimap "<<std::endl;
+                            std::cout << "multimap "<<std::endl;
                             s_pred = globalsMap[read][pred[0]];
                         }else s_pred = globalsMap[read].begin()->second;
                     }
