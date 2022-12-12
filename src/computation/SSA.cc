@@ -269,14 +269,11 @@ void SSA::renameSSA(Computation* comp){
                 newName.erase(newName.begin());
                 newName.erase(newName.end() - 1);
                 //std::cout << "the num write space " << st->getWriteDataSpace(j) << std::endl;
-
                 std::string a,b;
                 for(int i=0;i< st->getExecutionSchedule()->outArity();i++){
                     b = 'a'+std::to_string(i)+',';
                     a +=b;
                 }
-
-
                 a.erase(a.end() - 1);
                 b.erase(b.end() - 1);
                 std::string right = a;
@@ -284,15 +281,10 @@ void SSA::renameSSA(Computation* comp){
 
                 string relation_string = "{["+a+"] -> ["+right+"] : c1 = "+b+"+1}";
 
-
                 Relation* r2= new Relation(relation_string);
 
                 Relation* r3 = r2->Compose(st->getExecutionSchedule());
-
-                std::cout<<"new execution schedule "<<r3->prettyPrintString() <<std::endl;
-                std::cout<<"new iteration space "<<st->getIterationSpace()->prettyPrintString() <<std::endl;
-
-
+               // std::cout<<"new iteration space "<<st->getIterationSpace()->prettyPrintString() <<std::endl;
                 Stmt *phi = new Stmt(
                         "phi",
                         st->getIterationSpace()->prettyPrintString(),
@@ -303,16 +295,14 @@ void SSA::renameSSA(Computation* comp){
 
                 phi->setPhiNode(true);
                 phi->setDefPhi(true);
+                phi->setArrayAccess(true);
                 phiComp->addStmt(phi);
                 merge_to_stmt[phi] = st;
                 stmt_to_merge[st] = phi;
                 globalsMap[st->getWriteDataSpace(j)].insert(std::make_pair(st,phi ));
             }
-
         }
-
     }
-
     //SSA::Member::predecessor={};
     Node* n = createScheduleTree(phiComp);
     n->calc_all_pred();

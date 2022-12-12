@@ -1027,6 +1027,23 @@ TEST_F(SetRelationTest, Compose) {
     delete expected;
 }
 
+TEST_F(SetRelationTest, Composebug) {
+
+    Relation* r1 = new Relation("{ [nsg] -> [2, a1, 1]:a1=nsg }");
+    Relation* r2= new Relation("{ [a0, a1, a2] -> [a0, a1, a2] : a0 - a0 = 0 && a1 - a1 = 0 && a2 - a2 = 0 }");
+
+    Relation* result = r2->Compose(r1);
+    std::cout << "the result after compose is "<< result->prettyPrintString()<<std::endl;
+    Relation* expected
+            = new Relation("{ [x,z,r] -> [w,t]: w=x+z-r-5 && t=r+2 }");
+    //EXPECT_EQ(expected->toString(), result->toString());
+
+    delete r1;
+    //delete r2;
+    //delete result;
+    delete expected;
+}
+
 
 // Test composition of relations with uninterpreted function calls.
 // Both relations are functions.

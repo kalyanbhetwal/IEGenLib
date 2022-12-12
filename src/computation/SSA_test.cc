@@ -869,8 +869,7 @@ TEST(SSATest, HF) {
 
 
    parflowio.finalize();
-    std::cout <<"Successfully executed the loop "<<std::endl;
-    //std:: cout << parflowio.codeGen();
+    std:: cout << parflowio.codeGen();
    // std:: cout << parflowio.toDotString() << '\n';
 
     Stmt *  savg = new Stmt("sum+=test(x,y,z);",
