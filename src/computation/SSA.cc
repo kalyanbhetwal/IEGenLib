@@ -423,7 +423,7 @@ void SSA::renameSSA(Computation* comp){
                 }else {
                     if (globalsMap.find(read) != globalsMap.end()) {
                         if(globalsMap[read].size()>1){
-                            std::cout << "multimap "<<std::endl;
+                            //std::cout << "multimap "<<std::endl;
                             s_pred = globalsMap[read][pred[0]];
                         }else s_pred = globalsMap[read].begin()->second;
                     }
