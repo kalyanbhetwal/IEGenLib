@@ -310,17 +310,13 @@ void SSA::renameSSA(Computation* comp){
     n->calc_all_backward_paths();
 
     for (int b = 0; b < phiComp->getNumStmts(); b++) {
-        //std::cout<<"the num of statement" <<b<<std::endl;
-        Stmt *s1;
-        s1 = phiComp->getStmt(b);
-        comp->addStmt(s1);
+        comp->addStmt(phiComp->getStmt(b));
     }
 
     // rename all the phi nodes variables and statements
     rename(comp);
 
     for (int b = 0; b < comp->getNumStmts(); b++) {
-       // std::cout<<"#no stmt " <<b <<std::endl;
         Stmt *s1;
         s1 = comp->getStmt(b);
 

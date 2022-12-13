@@ -1062,6 +1062,10 @@ TEST(SSATest, HF_T) {
 
     Computation  c;
 
+    c.addDataSpace("m_X", "int");
+    c.addDataSpace("m_A", "int");
+
+
     Stmt *sh = new Stmt("X =1 ",
                         "{[0]}",
                         "{[0]->[0]}",
@@ -1071,16 +1075,18 @@ TEST(SSATest, HF_T) {
                         });
     c.addStmt(sh);
 
-    Stmt *s1 = new Stmt("X =1 ",
-                        "{[nsg]:0<nsg<a}",
+    Stmt *s1 = new Stmt("X = 2 ",
+                        "{[nsg]:0<=nsg< NM}",
                         "{[nsg]->[1,nsg,0]}",
                         {},
                         {
-                                {"m_A", "{[0]->[0]}"}
+                                {"m_A", "{[nsg]->[0]}"}
                         });
     c.addStmt(s1);
     c.finalize();
-    c.toDotString();
+    //c.printInfo();
+    std::cout<< c.codeGen();
+    std::cout << c.toDotString();
 
 
 }

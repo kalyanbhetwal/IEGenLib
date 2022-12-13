@@ -2976,6 +2976,10 @@ Relation *Relation::Compose(const Relation *rhs) const {
 */
 Set *Relation::Apply(const Set* rhs) const {
     // Check that the arities are compatible.
+
+    //std::cout<< "r arity "<< rhs->prettyPrintString()<<std::endl;
+    //std::cout<< "l arity "<< this->prettyPrintString()<<std::endl;
+
     if (rhs->arity() != mInArity) {
        throw assert_exception("Relation::Apply: mismatched arities");
     }

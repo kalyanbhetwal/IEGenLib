@@ -1456,7 +1456,7 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
 }
 
 void Computation::finalize(bool deleteDeadNodes) {
-     SSA::generateSSA(this);
+    // SSA::generateSSA(this);
      adjustExecutionSchedules();
      padExecutionSchedules();
 
@@ -1748,7 +1748,7 @@ void Computation::adjustExecutionSchedules() {
             //TODO: Need to find what it does and remove if not needed
             int level = 0, diff = 0;
             while (level < outArity && diff == 0) {
-                if (currTuple.elemIsConst(level + inArity) 
+                if (currTuple.elemIsConst(level + inArity)
                     && oldTuple.elemIsConst(level)) {
                     diff = currTuple.elemConstVal(level + inArity)
                         - oldTuple.elemConstVal(level);
@@ -1758,7 +1758,7 @@ void Computation::adjustExecutionSchedules() {
             if (diff != 0) { level -= 2; }
             // Update oldTuple
             for( int j = 0; j < outArity; j++) {
-                oldTuple.setTupleElem(j, 
+                oldTuple.setTupleElem(j,
                     currTuple.elemConstVal(j + inArity));
             }
             for (int j = outArity; j < maxArity; j++) {
@@ -1782,7 +1782,7 @@ void Computation::adjustExecutionSchedules() {
             idx++;
             // Update last tuple
             for( int j = 0; j < outArity; j++) {
-                lastTuple.setTupleElem(j, 
+                lastTuple.setTupleElem(j,
                     currTuple.elemConstVal(j + inArity));
             }
             for (int j = outArity; j < maxArity; j++) {
@@ -1793,10 +1793,11 @@ void Computation::adjustExecutionSchedules() {
      
     // Handle any remaining dynamically added statements
 	int stmtNum = lastTuple.elemConstVal(0);
-    for (idx; idx < getNumStmts(); idx++) {
-		getStmt(idx)->setExecutionSchedule(new Relation(
-            "{[0]->[" + std::to_string(++stmtNum) + "]}"));
-    }
+//    for (idx; idx < getNumStmts(); idx++) {
+//        std::cout<<"Why I am here"<<std::endl;
+//		getStmt(idx)->setExecutionSchedule(new Relation(
+//            "{[0]->[" + std::to_string(++stmtNum) + "]}"));
+//    }
 }
 
 void Computation::deleteDeadStatements(){
