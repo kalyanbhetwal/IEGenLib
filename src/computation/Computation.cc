@@ -1456,7 +1456,7 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
 }
 
 void Computation::finalize(bool deleteDeadNodes) {
-    // SSA::generateSSA(this);
+     SSA::generateSSA(this);
      adjustExecutionSchedules();
      padExecutionSchedules();
 
