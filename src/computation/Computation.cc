@@ -61,14 +61,16 @@ namespace iegenlib {
 unsigned int Computation::numComputationRenames = 0;
 
 Computation::Computation(const std::string& name) {
-  setName(name);
+    setName(name);
 }
 
 Computation::~Computation() {
     clear();
 }
 
-Computation::Computation(const Computation& other) { *this = other; }
+Computation::Computation(const Computation& other) {
+    *this = other;
+}
 
 Computation& Computation::operator=(const Computation& other) {
     this->stmts = other.stmts;
@@ -110,22 +112,22 @@ bool Computation::operator==(const Computation& other) const {
     }
 
     return (
-        this->name == other.name &&
-        //this->arrays == other.arrays &&
-        stmtsEqual &&
-        this->dataSpaces == other.dataSpaces &&
-        this->parameters == other.parameters &&
-        this->returnValues == other.returnValues &&
-        transformationListsEqual
-    );
+               this->name == other.name &&
+               //this->arrays == other.arrays &&
+               stmtsEqual &&
+               this->dataSpaces == other.dataSpaces &&
+               this->parameters == other.parameters &&
+               this->returnValues == other.returnValues &&
+               transformationListsEqual
+           );
 }
 
 std::string Computation::getName() const {
-  return name;
+    return name;
 }
 
 void Computation::setName(std::string newName) {
-  this->name = newName;
+    this->name = newName;
 }
 
 bool Computation::hasName() const {
@@ -313,7 +315,9 @@ bool Computation::enforceArraySSA(Stmt* stmt, int dataIdx, bool isRead) {
 */
 
 void Computation::enforceSSA(int stmtIdx) {
-    if (stmtIdx < 0 || stmtIdx >= getNumStmts()) { return; }
+    if (stmtIdx < 0 || stmtIdx >= getNumStmts()) {
+        return;
+    }
 //
 //    struct SSAWrite {
 //        std::string oldWrite, newWrite;
@@ -409,16 +413,20 @@ Set* Computation::trimISDataSpaces(Set* set, std::set<std::string> &trimmedNames
     return new Set(setStr);
 }
 
-Stmt* Computation::getStmt(unsigned int index) const { return stmts.at(index); }
+Stmt* Computation::getStmt(unsigned int index) const {
+    return stmts.at(index);
+}
 
-unsigned int Computation::getNumStmts() const { return stmts.size(); }
+unsigned int Computation::getNumStmts() const {
+    return stmts.size();
+}
 
 void Computation::addDataSpace(std::string dataSpaceName, std::string dataSpaceType) {
     if (isDataSpace(dataSpaceName)) {
         std::string previousType = getDataSpaceType(dataSpaceName);
         if (dataSpaceType != previousType) {
             throw assert_exception("Attempted to add already-added data space '"
-                + dataSpaceName + "' with new type '" + dataSpaceType + "' (was '" + previousType + "').");
+                                   + dataSpaceName + "' with new type '" + dataSpaceType + "' (was '" + previousType + "').");
         }
     }
     bool alreadyDelimited = nameIsDelimited(dataSpaceName);
@@ -444,7 +452,7 @@ std::map<std::string, std::string> Computation::getUndelimitedDataSpaces() const
     return undelimitedDataSpaces;
 }
 
-std::string Computation::getDataSpaceType(std::string dataSpaceName) const{
+std::string Computation::getDataSpaceType(std::string dataSpaceName) const {
     if (!nameIsDelimited(dataSpaceName)) {
         dataSpaceName = delimitDataSpaceName(dataSpaceName);
     }
@@ -491,7 +499,7 @@ void Computation::addReturnValue(std::string name, bool isDataSpace) {
         assertValidDataSpaceName(name, alreadyDelimited);
     }
     returnValues.emplace_back((alreadyDelimited || !isDataSpace) ? name : delimitDataSpaceName(name),
-                            isDataSpace);
+                              isDataSpace);
 }
 
 std::vector<std::string> Computation::getReturnValues() const {
@@ -513,7 +521,7 @@ std::unordered_set<std::string> Computation::getActiveOutValues() const {
     }
     for (const std::string &parameterName : parameters) {
         if (getDataSpaceType(parameterName).find('&') != std::string::npos ||
-            getDataSpaceType(parameterName).find('*') != std::string::npos) {
+                getDataSpaceType(parameterName).find('*') != std::string::npos) {
             names.emplace(parameterName);
         }
     }
@@ -523,9 +531,9 @@ std::unordered_set<std::string> Computation::getActiveOutValues() const {
 
 bool Computation::isReturnValue(std::string dataSpaceName) const {
     auto pos = std::find_if(returnValues.begin(), returnValues.end(),
-                            [&dataSpaceName](const std::pair<std::string, bool>& retVal) {
-                                return dataSpaceName.compare(retVal.first) == 0;
-                            });
+    [&dataSpaceName](const std::pair<std::string, bool>& retVal) {
+        return dataSpaceName.compare(retVal.first) == 0;
+    });
     return pos != returnValues.end();
 }
 
@@ -639,7 +647,7 @@ std::string Computation::codeGenMemoryManagementString() {
     std::map<std::string, std::string> dataSpaces = this->getDelimitedDataSpaces();
     std::map<std::string, std::string>::iterator it = dataSpaces.begin();
 
-    while (it != dataSpaces.end()){
+    while (it != dataSpaces.end()) {
         std::string name = it->first;
 
         std::string type = it->second;
@@ -663,9 +671,9 @@ void Computation::clear() {
 }
 
 AppendComputationResult Computation::appendComputation(
-  const Computation* other, std::string surroundingIterDomainStr,
-  std::string surroundingExecScheduleStr,
-  std::vector<std::string> arguments){
+    const Computation* other, std::string surroundingIterDomainStr,
+    std::string surroundingExecScheduleStr,
+    std::vector<std::string> arguments) {
     Set* surroundingIterDomain = new Set(delimitDataSpacesInString(surroundingIterDomainStr));
     Relation* surroundingExecSchedule = new Relation(surroundingExecScheduleStr);
 
@@ -724,7 +732,7 @@ AppendComputationResult Computation::appendComputation(
         std::string param = toAppend->getParameterName(i);
         std::string paramType = toAppend->getParameterType(i);
         if (paramType.find("&") != std::string::npos ||
-            paramType.find("*") != std::string::npos) {
+                paramType.find("*") != std::string::npos) {
             toAppend->replaceDataSpaceName(param, arguments[i]);
         } else {
             Stmt* paramDeclStmt = new Stmt();
@@ -764,7 +772,7 @@ AppendComputationResult Computation::appendComputation(
     unsigned int remainingParamDeclStmts = numWrites;
     bool processingOriginalStmts = false;
     for (unsigned int stmtNum = 0; stmtNum < toAppend->getNumStmts();
-         ++stmtNum) {
+            ++stmtNum) {
         // once we've finished processing prepended parameter declaration
         // statements, increase the offset for remaining (original) statements
         // by the number of prepended statements
@@ -887,7 +895,7 @@ AppendComputationResult Computation::appendComputation(
         // insert surrounding schedule tuple elements except the last one, which
         // must be combined with first append tuple value
         for (int i = surroundingExecSchedule->inArity();
-             i < surroundingExecSchedule->arity() - 1; ++i) {
+                i < surroundingExecSchedule->arity() - 1; ++i) {
             newExecTuple.copyTupleElem(surroundingExecTuple, i,
                                        currentTuplePos++);
         }
@@ -933,7 +941,7 @@ AppendComputationResult Computation::appendComputation(
                 }
                 std::vector<int> shiftReadRel;
                 for (unsigned int pos = 0; pos < appendeeReadRel->arity();
-                     ++pos) {
+                        ++pos) {
                     shiftReadRel.push_back(shiftDistance + pos);
                 }
                 appendeeReadRel->remapTupleVars(shiftReadRel);
@@ -978,7 +986,7 @@ AppendComputationResult Computation::appendComputation(
                 }
                 std::vector<int> shiftWriteRel;
                 for (unsigned int pos = 0; pos < appendeeWriteRel->arity();
-                     ++pos) {
+                        ++pos) {
                     shiftWriteRel.push_back(shiftDistance + pos);
                 }
                 appendeeWriteRel->remapTupleVars(shiftWriteRel);
@@ -989,7 +997,7 @@ AppendComputationResult Computation::appendComputation(
                     appendeeWriteRel->getTupleDecl();
                 for (unsigned int pos = 0; pos < surroundingIterArity; ++pos) {
                     shiftedAppendeeWriteTuple.copyTupleElem(surroundingIterTuple,
-                                                           pos, pos);
+                                                            pos, pos);
                 }
 
                 // construct new write relation
@@ -1028,7 +1036,7 @@ AppendComputationResult Computation::appendComputation(
 //  and returns the true if a is lexicographically
 //  lower in order to b.
 bool Computation::activeStatementComparator(const std::pair<int,Set*>& a,
-		    const std::pair<int,Set*>& b){
+        const std::pair<int,Set*>& b) {
     return (*a.second) < (*b.second);
 }
 
@@ -1037,13 +1045,13 @@ bool Computation::activeStatementComparator(const std::pair<int,Set*>& a,
 //  statement s2
 //  \param s1 First statement Id
 //  \param s2 Second statement Id.
-void Computation::reschedule(int s1, int s2){
+void Computation::reschedule(int s1, int s2) {
     if (s1 >= stmts.size() || s1 < 0 || s2 >= stmts.size()
-		    || s2 < 0){
+            || s2 < 0) {
         throw assert_exception("s1 & s2 must be in bounds ");
     }
 
-    if (s1 == s2){
+    if (s1 == s2) {
         throw assert_exception("s1 cannot be s2");
     }
     // newIS is a list of pairs of statement id
@@ -1054,19 +1062,19 @@ void Computation::reschedule(int s1, int s2){
     std::vector<Set*> transformedSpaces = applyTransformations();
     Set * s1Set = nullptr;
     Set * s2Set = nullptr;
-    for(Set* set : transformedSpaces){
-	newIS.push_back(std::make_pair(i,set));
-	if(s1 == i){
-	    s1Set = set;
-	}
-	if(s2 == i){
-	    s2Set = set;
-	}
+    for(Set* set : transformedSpaces) {
+        newIS.push_back(std::make_pair(i,set));
+        if(s1 == i) {
+            s1Set = set;
+        }
+        if(s2 == i) {
+            s2Set = set;
+        }
         i++;
     }
     // Sort by lexicographical order
     std::sort(newIS.begin(),newIS.end(),
-		    Computation::activeStatementComparator);
+              Computation::activeStatementComparator);
 
     //TODO: take another pass to correctly rename
     //      variables in the algorithm.
@@ -1077,14 +1085,14 @@ void Computation::reschedule(int s1, int s2){
     TupleDecl s2Tuple =  s2Set->getTupleDecl();
     int s1PVal = -1;
     int s2PVal = -1;
-    for(i  = 0 ; i < s1Tuple.getSize(); i++){
+    for(i  = 0 ; i < s1Tuple.getSize(); i++) {
         if (s1Tuple.elemToString(i,true)!=
-                s2Tuple.elemToString(i,true)){
-	    splitLevel = i;
+                s2Tuple.elemToString(i,true)) {
+            splitLevel = i;
             s1PVal = s1Tuple.elemConstVal(i);
-	    s2PVal = s2Tuple.elemConstVal(i);
-	    break;
-	}
+            s2PVal = s2Tuple.elemConstVal(i);
+            break;
+        }
     }
 
     // Create output and input tuple decl
@@ -1093,38 +1101,38 @@ void Computation::reschedule(int s1, int s2){
     std::string prefix = "t";
     TupleDecl newInputTuple (s1Tuple.size());
     TupleDecl newOutputTuple (s1Tuple.size());
-    for(int j = 0; j < newInputTuple.size(); j++){
+    for(int j = 0; j < newInputTuple.size(); j++) {
         newInputTuple.setTupleElem(j,prefix+std::to_string(j));
-	std::string outTupleVar= prefix+std::to_string(j);
-	// Use a different tuple variable for output
-	// if it is the split level.
-	// Example:
-	// {[t0,t1,t2,t3] -> [t0,t1p,t2,t3]}
-	// t1p for a split level of 1
-	if(j == splitLevel){
+        std::string outTupleVar= prefix+std::to_string(j);
+        // Use a different tuple variable for output
+        // if it is the split level.
+        // Example:
+        // {[t0,t1,t2,t3] -> [t0,t1p,t2,t3]}
+        // t1p for a split level of 1
+        if(j == splitLevel) {
             outTupleVar+="p";
-	}
-	newOutputTuple.setTupleElem(j,outTupleVar);
+        }
+        newOutputTuple.setTupleElem(j,outTupleVar);
     }
 
 
     int newS1PositionVal = s2Tuple.elemConstVal(splitLevel) - 1;
-    if (newS1PositionVal < 0){
+    if (newS1PositionVal < 0) {
         newS1PositionVal  = 0;
     }
 
     // Create constraint for new position of S1
     std::string constraint = newOutputTuple.elemVarString(splitLevel)
-	    +" + "+ newInputTuple.elemVarString(splitLevel)+
-	     " - "+ std::to_string(s1PVal)+ " = "+
-	     std::to_string(newS1PositionVal);
+                             +" + "+ newInputTuple.elemVarString(splitLevel)+
+                             " - "+ std::to_string(s1PVal)+ " = "+
+                             std::to_string(newS1PositionVal);
 
     // Construct new reiation for s1
     std::string rString ="{"+ newInputTuple.toString(true,0,false) + "->"
-			   +newOutputTuple.toString(true,0,false) +
-			   +": "+constraint+" }";
+                         +newOutputTuple.toString(true,0,false) +
+                         +": "+constraint+" }";
     Relation * rS1 =
-	    new Relation(rString);
+        new Relation(rString);
     // Adds s1's transformation
     addTransformation(s1,rS1);
 
@@ -1132,51 +1140,51 @@ void Computation::reschedule(int s1, int s2){
     // statment's siblings at that level.
     // Should we add unit transformation to statements
     // not affected by reschedule operation.
-    for(std::pair<int,Set*> p : newIS ){
+    for(std::pair<int,Set*> p : newIS ) {
         // Ignore s1
-	if (p.first == s1)
+        if (p.first == s1)
             continue;
         // Check if this statement is a sibling
-	// to s1 and s2.
-	if (splitLevel - 1 >= 0 &&
-	    p.second->getTupleDecl().elemToString(splitLevel-1)!=
-	    s1Tuple.elemToString(splitLevel-1)){
+        // to s1 and s2.
+        if (splitLevel - 1 >= 0 &&
+                p.second->getTupleDecl().elemToString(splitLevel-1)!=
+                s1Tuple.elemToString(splitLevel-1)) {
             continue;
         }
 
         int val = p.second->getTupleDecl().elemConstVal(splitLevel);
-	// if s1 is lexicagrphically less than s2
-        if (s1PVal < s2PVal){
-	    if (val <= newS1PositionVal && val > s1PVal){
-	        constraint = newOutputTuple.elemVarString(splitLevel)
-	 	        +" = "+ newInputTuple.elemVarString(splitLevel)+
-		        " - 1";
-	        std::string rSiString =
-		        "{"+ newInputTuple.toString(true,0,false) + "->"
-			    +newOutputTuple.toString(true,0,false) +
-			    +": "+constraint+" }";
-	        Relation* rSi = new Relation(rSiString);
+        // if s1 is lexicagrphically less than s2
+        if (s1PVal < s2PVal) {
+            if (val <= newS1PositionVal && val > s1PVal) {
+                constraint = newOutputTuple.elemVarString(splitLevel)
+                             +" = "+ newInputTuple.elemVarString(splitLevel)+
+                             " - 1";
+                std::string rSiString =
+                    "{"+ newInputTuple.toString(true,0,false) + "->"
+                    +newOutputTuple.toString(true,0,false) +
+                    +": "+constraint+" }";
+                Relation* rSi = new Relation(rSiString);
                 addTransformation(p.first,rSi);
-	    }
-	} else{
-	    // if s1 is lexicographically greater than s2
-            if (val >= s2PVal && val < s1PVal){
-	        constraint = newOutputTuple.elemVarString(splitLevel)
-	 	        +" = "+ newInputTuple.elemVarString(splitLevel)+
-		        " + 1";
-	        std::string rSiString =
-		        "{"+ newInputTuple.toString(true,0,false) + "->"
-			    +newOutputTuple.toString(true,0,false) +
-			    +": "+constraint+" }";
-	        Relation* rSi = new Relation(rSiString);
+            }
+        } else {
+            // if s1 is lexicographically greater than s2
+            if (val >= s2PVal && val < s1PVal) {
+                constraint = newOutputTuple.elemVarString(splitLevel)
+                             +" = "+ newInputTuple.elemVarString(splitLevel)+
+                             " + 1";
+                std::string rSiString =
+                    "{"+ newInputTuple.toString(true,0,false) + "->"
+                    +newOutputTuple.toString(true,0,false) +
+                    +": "+constraint+" }";
+                Relation* rSi = new Relation(rSiString);
                 addTransformation(p.first,rSi);
 
-	    }
-	}
+            }
+        }
     }
 
 
-    for(Set* set : transformedSpaces){
+    for(Set* set : transformedSpaces) {
         delete set;
     }
 }
@@ -1198,13 +1206,13 @@ void Computation::reschedule(int s1, int s2){
 //  fuse(S0,S1,2);
 //  Result
 //  S0: {[0,i,0,j,0] | stuff}; S1:{[0,i,1,j,0] | stuff}
-void Computation::fuse (int s1, int s2, int fuseLevel){
+void Computation::fuse (int s1, int s2, int fuseLevel) {
     if (s1 >= stmts.size() || s1 < 0 || s2 >= stmts.size()
-		    || s2 < 0){
+            || s2 < 0) {
         throw assert_exception("s1 & s2 must be in bounds ");
     }
 
-    if (s1 == s2){
+    if (s1 == s2) {
         throw assert_exception("s1 cannot be s2");
     }
     // newIS is a list of pairs of statement id
@@ -1215,19 +1223,19 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
     std::vector<Set*> transformedSpaces = applyTransformations();
     Set * s1Set = nullptr;
     Set * s2Set = nullptr;
-    for(Set* set : transformedSpaces){
-	newIS.push_back(std::make_pair(i,set));
-	if(s1 == i){
-	    s1Set = set;
-	}
-	if(s2 == i){
-	    s2Set = set;
-	}
+    for(Set* set : transformedSpaces) {
+        newIS.push_back(std::make_pair(i,set));
+        if(s1 == i) {
+            s1Set = set;
+        }
+        if(s2 == i) {
+            s2Set = set;
+        }
         i++;
     }
     // Sort by lexicographical order
     std::sort(newIS.begin(),newIS.end(),
-		    Computation::activeStatementComparator);
+              Computation::activeStatementComparator);
 
     // Find Split level for S1 and s2 Set
     // A split point is the point where
@@ -1241,26 +1249,26 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
 
     // Fuse level must be constant tuple variable.
     if(!s1Tuple.elemIsConst(fuseLevel) ||
-		    !s2Tuple.elemIsConst(fuseLevel)){
+            !s2Tuple.elemIsConst(fuseLevel)) {
         throw assert_exception("fuse level must be constant tuple"
-			" variable in s1 and s2");
+                               " variable in s1 and s2");
     }
     int s1PVal = -1;
     int s2PVal = -1;
 
-    for(i  = 0 ; i < s1Tuple.getSize(); i++){
+    for(i  = 0 ; i < s1Tuple.getSize(); i++) {
         if (s1Tuple.elemToString(i,true)!=
-                s2Tuple.elemToString(i,true)){
-	    splitLevel = i;
+                s2Tuple.elemToString(i,true)) {
+            splitLevel = i;
             s1PVal = s1Tuple.elemConstVal(i);
-	    s2PVal = s2Tuple.elemConstVal(i);
-	    break;
-	}
+            s2PVal = s2Tuple.elemConstVal(i);
+            break;
+        }
     }
 
     // If Split level is the same as the level
     // of fusion, then fusion is not possible
-    if (splitLevel == fuseLevel){
+    if (splitLevel == fuseLevel) {
         throw assert_exception("s1 & s2 statements are fused.");
     }
 
@@ -1272,28 +1280,28 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
 
     TupleDecl s2newOutputTuple (s2Tuple.size());
     TupleDecl s2newInputTuple (s2Tuple.size());
-    for(int j = 0; j < newInputTuple.size(); j++){
+    for(int j = 0; j < newInputTuple.size(); j++) {
         newInputTuple.setTupleElem(j,prefix+std::to_string(j));
-	s2newInputTuple.setTupleElem(j,prefix+std::to_string(j));
-	std::string outTupleVar= prefix+std::to_string(j);
-	// Use a different tuple variable for output
-	// if it is the split level or level to be fused
-	// at. The split level and level to be fused at
-	// are important parts to make the transformation
-	// work.
-	// Example:
-	// {[t0,t1,t2,t3] -> [t0,t1p,t2,t3p]}
-	// t1p for a split level of 1 and t3p
-	// for fusion level 3.
-	if(j == splitLevel || j == fuseLevel){
+        s2newInputTuple.setTupleElem(j,prefix+std::to_string(j));
+        std::string outTupleVar= prefix+std::to_string(j);
+        // Use a different tuple variable for output
+        // if it is the split level or level to be fused
+        // at. The split level and level to be fused at
+        // are important parts to make the transformation
+        // work.
+        // Example:
+        // {[t0,t1,t2,t3] -> [t0,t1p,t2,t3p]}
+        // t1p for a split level of 1 and t3p
+        // for fusion level 3.
+        if(j == splitLevel || j == fuseLevel) {
             outTupleVar+="p";
-	}
-	newOutputTuple.setTupleElem(j,outTupleVar);
-        if ( j >= splitLevel && j <= fuseLevel){
-	    s2newOutputTuple.setTupleElem(j,prefix+std::to_string(j)+"p");
-	}else{
-	    s2newOutputTuple.setTupleElem(j,prefix+std::to_string(j));
-	}
+        }
+        newOutputTuple.setTupleElem(j,outTupleVar);
+        if ( j >= splitLevel && j <= fuseLevel) {
+            s2newOutputTuple.setTupleElem(j,prefix+std::to_string(j)+"p");
+        } else {
+            s2newOutputTuple.setTupleElem(j,prefix+std::to_string(j));
+        }
     }
 
 
@@ -1308,26 +1316,26 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
     // S2 must have the same schedule with S1 from
     // split level up until just before fuse level
     std::string constraint =
-	    s2newOutputTuple.elemVarString(splitLevel)
-	    +" + "+ s2newInputTuple.elemVarString(splitLevel)+
-	     " - "+ std::to_string(s2PVal)+ " = "+
-	     std::to_string(s1PVal);
+        s2newOutputTuple.elemVarString(splitLevel)
+        +" + "+ s2newInputTuple.elemVarString(splitLevel)+
+        " - "+ std::to_string(s2PVal)+ " = "+
+        std::to_string(s1PVal);
 
-    for(int tuplIndex = splitLevel+1; tuplIndex < fuseLevel; tuplIndex++){
+    for(int tuplIndex = splitLevel+1; tuplIndex < fuseLevel; tuplIndex++) {
         // Ignore non constant tuple variables
-	if(!s2Tuple.elemIsConst(tuplIndex) ||
-			!s1Tuple.elemIsConst(tuplIndex)){
+        if(!s2Tuple.elemIsConst(tuplIndex) ||
+                !s1Tuple.elemIsConst(tuplIndex)) {
 
             constraint += " && "+ s2newOutputTuple.elemVarString(tuplIndex)
-	 	        +" = "+ s2newInputTuple.elemVarString(tuplIndex) ;
-	    continue;
-	}
-	constraint+=" && "+
-            s2newOutputTuple.elemVarString(tuplIndex)
-	    +" + "+ s2newInputTuple.elemVarString(tuplIndex)+
-	     " - "+ std::to_string(s2Tuple.elemConstVal(tuplIndex))
-	     + " = "+
-	     std::to_string(s1Tuple.elemConstVal(tuplIndex));
+                          +" = "+ s2newInputTuple.elemVarString(tuplIndex) ;
+            continue;
+        }
+        constraint+=" && "+
+                    s2newOutputTuple.elemVarString(tuplIndex)
+                    +" + "+ s2newInputTuple.elemVarString(tuplIndex)+
+                    " - "+ std::to_string(s2Tuple.elemConstVal(tuplIndex))
+                    + " = "+
+                    std::to_string(s1Tuple.elemConstVal(tuplIndex));
     }
 
     // Second constraint places S2 just after S1 on
@@ -1335,19 +1343,19 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
     // all siblings of fuse level to reflect this
     // insertion
     constraint+= " && "+
-            s2newOutputTuple.elemVarString(fuseLevel)
-	    +" + "+ s2newInputTuple.elemVarString(fuseLevel)+
-	     " - "+ std::to_string(s2Tuple.elemConstVal(fuseLevel))
-	     + " = "+
-	     std::to_string(s1Tuple.elemConstVal(fuseLevel)) + " + 1" ;
+                 s2newOutputTuple.elemVarString(fuseLevel)
+                 +" + "+ s2newInputTuple.elemVarString(fuseLevel)+
+                 " - "+ std::to_string(s2Tuple.elemConstVal(fuseLevel))
+                 + " = "+
+                 std::to_string(s1Tuple.elemConstVal(fuseLevel)) + " + 1" ;
 
 
     // Construct new reiation for s2
     std::string rString ="{"+ s2newInputTuple.toString(true,0,false) + "->"
-			   +s2newOutputTuple.toString(true,0,false) +
-			   +": "+constraint+" }";
+                         +s2newOutputTuple.toString(true,0,false) +
+                         +": "+constraint+" }";
     Relation * rS2 =
-	  new Relation(rString);
+        new Relation(rString);
     // Adds s1's transformation
     addTransformation(s2,rS2);
 
@@ -1355,67 +1363,67 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
     // statment's siblings at split level
     // Should we add unit transformation to statements
     // not affected by reschedule operation.
-    for(std::pair<int,Set*> p : newIS ){
+    for(std::pair<int,Set*> p : newIS ) {
         // Check if this statement is a sibling
-	// to s1 and s2.
-	if (splitLevel - 1 >= 0 &&
-	    p.second->getTupleDecl().elemToString(splitLevel-1)!=
-	    s1Tuple.elemToString(splitLevel-1)){
+        // to s1 and s2.
+        if (splitLevel - 1 >= 0 &&
+                p.second->getTupleDecl().elemToString(splitLevel-1)!=
+                s1Tuple.elemToString(splitLevel-1)) {
             continue;
         }
 
         int val = p.second->getTupleDecl().elemConstVal(splitLevel);
 
-	// If we find another relation that has exactly
-	// the same value on splitLevel, we ignore updating
-	// siblings at split level.
-	// Example
-	// "{[0,t1,0,t2,0]:stuff}",
-	// "{[0,t1,1,t2,0]:stuff}",
-	// "{[1,t1,0,t2,0]:stuff}",
-	// "{[1,t1,0,t2,1]:stuff}"
-	//
-	// Fusion of S3 with S1 will take out
-	// S1 and place it beofore S3. The problem
-	// is that we cant decrement the tuple constant
-	// of S2 and S3 so we need to ignore updates
-	// to siblings in this case. The check below
-	// ensures this corner case is considered.
-	if (val == s2PVal && p.first != s2){
-	    break;
-	}
+        // If we find another relation that has exactly
+        // the same value on splitLevel, we ignore updating
+        // siblings at split level.
+        // Example
+        // "{[0,t1,0,t2,0]:stuff}",
+        // "{[0,t1,1,t2,0]:stuff}",
+        // "{[1,t1,0,t2,0]:stuff}",
+        // "{[1,t1,0,t2,1]:stuff}"
+        //
+        // Fusion of S3 with S1 will take out
+        // S1 and place it beofore S3. The problem
+        // is that we cant decrement the tuple constant
+        // of S2 and S3 so we need to ignore updates
+        // to siblings in this case. The check below
+        // ensures this corner case is considered.
+        if (val == s2PVal && p.first != s2) {
+            break;
+        }
 
-	// if s1 is lexicagrphically less than s2
-        if (s1PVal < s2PVal){
-	    if (val > s2PVal){
-	        constraint = newOutputTuple.elemVarString(splitLevel)
-	 	        +" = "+ newInputTuple.elemVarString(splitLevel)+
-		        " - 1 && "+ newOutputTuple.elemVarString(fuseLevel)
-	 	        +" = "+ newInputTuple.elemVarString(fuseLevel);
-	        std::string rSiString =
-		        "{"+ newInputTuple.toString(true,0,false) + "->"
-			    +newOutputTuple.toString(true,0,false) +
-			    +": "+constraint+" }";
+        // if s1 is lexicagrphically less than s2
+        if (s1PVal < s2PVal) {
+            if (val > s2PVal) {
+                constraint = newOutputTuple.elemVarString(splitLevel)
+                             +" = "+ newInputTuple.elemVarString(splitLevel)+
+                             " - 1 && "+ newOutputTuple.elemVarString(fuseLevel)
+                             +" = "+ newInputTuple.elemVarString(fuseLevel);
+                std::string rSiString =
+                    "{"+ newInputTuple.toString(true,0,false) + "->"
+                    +newOutputTuple.toString(true,0,false) +
+                    +": "+constraint+" }";
 
-		Relation* rSi = new Relation(rSiString);
+                Relation* rSi = new Relation(rSiString);
                 addTransformation(p.first,rSi);
-	    }
-	} else{
-	    // if s1 is lexicographically greater than s2
-            if (val > s2PVal && val <= s1PVal){
-	        constraint = newOutputTuple.elemVarString(splitLevel)
-	 	        +" = "+ newInputTuple.elemVarString(splitLevel)+
-		        " - 1 && "+ newOutputTuple.elemVarString(fuseLevel)
-	 	        +" = "+ newInputTuple.elemVarString(fuseLevel) ;
-	        std::string rSiString =
-		        "{"+ newInputTuple.toString(true,0,false) + "->"
-			    +newOutputTuple.toString(true,0,false) +
-			    +": "+constraint+" }";
-	        Relation* rSi = new Relation(rSiString);
+            }
+        } else {
+            // if s1 is lexicographically greater than s2
+            if (val > s2PVal && val <= s1PVal) {
+                constraint = newOutputTuple.elemVarString(splitLevel)
+                             +" = "+ newInputTuple.elemVarString(splitLevel)+
+                             " - 1 && "+ newOutputTuple.elemVarString(fuseLevel)
+                             +" = "+ newInputTuple.elemVarString(fuseLevel) ;
+                std::string rSiString =
+                    "{"+ newInputTuple.toString(true,0,false) + "->"
+                    +newOutputTuple.toString(true,0,false) +
+                    +": "+constraint+" }";
+                Relation* rSi = new Relation(rSiString);
                 addTransformation(p.first,rSi);
 
-	    }
-	}
+            }
+        }
     }
 
 
@@ -1423,42 +1431,42 @@ void Computation::fuse (int s1, int s2, int fuseLevel){
     // Now go through each statement and update
     // statment's siblings at fuse  level. This involves
     // transforming every statement after S1
-    for(std::pair<int,Set*> p : newIS ){
+    for(std::pair<int,Set*> p : newIS ) {
         // Ignore s1
-	if (p.first == s2)
+        if (p.first == s2)
             continue;
         // Check if this statement is a sibling
-	// to s1 and s2.
-	if (fuseLevel - 1 >= 0 &&
-	    p.second->getTupleDecl().elemToString(fuseLevel-1)!=
-	    s1Tuple.elemToString(fuseLevel-1)){
+        // to s1 and s2.
+        if (fuseLevel - 1 >= 0 &&
+                p.second->getTupleDecl().elemToString(fuseLevel-1)!=
+                s1Tuple.elemToString(fuseLevel-1)) {
             continue;
         }
 
         int val = p.second->getTupleDecl().elemConstVal(fuseLevel);
-        if (val > s1PVal){
-	        constraint = newOutputTuple.elemVarString(fuseLevel)
-	 	        +" = "+ newInputTuple.elemVarString(fuseLevel)+
-		        " + 1 && "+ newOutputTuple.elemVarString(splitLevel)
-	 	        +" = "+ newInputTuple.elemVarString(splitLevel);
-	        std::string rSiString =
-		        "{"+ newInputTuple.toString(true,0,false) + "->"
-			    +newOutputTuple.toString(true,0,false) +
-			    +": "+constraint+" }";
-	        Relation* rSi = new Relation(rSiString);
-                addTransformation(p.first,rSi);
+        if (val > s1PVal) {
+            constraint = newOutputTuple.elemVarString(fuseLevel)
+                         +" = "+ newInputTuple.elemVarString(fuseLevel)+
+                         " + 1 && "+ newOutputTuple.elemVarString(splitLevel)
+                         +" = "+ newInputTuple.elemVarString(splitLevel);
+            std::string rSiString =
+                "{"+ newInputTuple.toString(true,0,false) + "->"
+                +newOutputTuple.toString(true,0,false) +
+                +": "+constraint+" }";
+            Relation* rSi = new Relation(rSiString);
+            addTransformation(p.first,rSi);
         }
     }
 
-    for(Set* set : transformedSpaces){
+    for(Set* set : transformedSpaces) {
         delete set;
     }
 }
 
 void Computation::finalize(bool deleteDeadNodes) {
-     SSA::generateSSA(this);
-     adjustExecutionSchedules();
-     padExecutionSchedules();
+    //SSA::generateSSA(this);
+    adjustExecutionSchedules();
+    padExecutionSchedules();
 
     if (deleteDeadNodes) {
         std::cerr << "Deleting Dead Nodes" << std::endl;
@@ -1467,9 +1475,13 @@ void Computation::finalize(bool deleteDeadNodes) {
 }
 
 bool Computation::consistentSetArity(const std::vector<Set*>& sets) {
-    if (sets.size() == 0) { return true; }
+    if (sets.size() == 0) {
+        return true;
+    }
     int arity = sets[0]->arity();
-    for (Set* set : sets) { if (set->arity() != arity) return false; }
+    for (Set* set : sets) {
+        if (set->arity() != arity) return false;
+    }
     return true;
 }
 
@@ -1525,13 +1537,13 @@ std::string Computation::delimitDataSpacesInString(std::string originalString) {
             std::ostringstream rewrittenSegment;
             std::size_t  currentPosInOriginalSegment = 0;
             for (auto match_it = std::sregex_iterator(originalSegment.begin(), originalSegment.end(), potentialVariableRegex);
-                 match_it != std::sregex_iterator(); ++match_it) {
+                    match_it != std::sregex_iterator(); ++match_it) {
                 // only replace potential identifiers that actually match existing data spaces
                 if (this->undelimitedDataSpaceNames.count((*match_it).str())) {
                     // grab everything between the last match and the beginning of this one, then add the delimited version
                     // of this one
                     rewrittenSegment << originalSegment.substr(currentPosInOriginalSegment,
-                                                              (*match_it).position() - currentPosInOriginalSegment)
+                                     (*match_it).position() - currentPosInOriginalSegment)
                                      << delimitDataSpaceName((*match_it).str());
                     currentPosInOriginalSegment = (*match_it).position() + (*match_it).length();
                 }
@@ -1553,7 +1565,7 @@ std::string Computation::delimitDataSpaceName(std::string dataSpaceName) {
     if (nameIsDelimited(dataSpaceName)) {
         throw assert_exception("Attempted to double-delimit data space '" + dataSpaceName + "'");
     }
-  return DATA_SPACE_DELIMITER + dataSpaceName + DATA_SPACE_DELIMITER;
+    return DATA_SPACE_DELIMITER + dataSpaceName + DATA_SPACE_DELIMITER;
 }
 
 std::string Computation::stripDataSpaceDelimiter(std::string delimitedStr) {
@@ -1585,9 +1597,11 @@ void Computation::padExecutionSchedules() {
     int maxArity = 0;
     for (int j = 0; j < getNumStmts(); j++) {
         int tmp = getStmt(j)->getExecutionSchedule()->outArity();
-        if (tmp > maxArity) { maxArity = tmp; }
+        if (tmp > maxArity) {
+            maxArity = tmp;
+        }
     }
-    
+
     // Pads iteration spaces by padding the execution schedule
     // The execution schedule is applied during applyTransformations()
     // Generate composition relation of the form
@@ -1599,17 +1613,23 @@ void Computation::padExecutionSchedules() {
         ss << "{[";
         for (int j = 0; j < i; j++) {
             ss << "a" << j;
-            if (j != i - 1) { ss << ","; }
+            if (j != i - 1) {
+                ss << ",";
+            }
         }
         ss << "] -> [";
         for (int j = 0; j < maxArity; j++) {
             ss << "a" << j;
-            if (j != maxArity - 1) { ss << ","; }
+            if (j != maxArity - 1) {
+                ss << ",";
+            }
         }
         ss << "] : ";
         for (int j = i; j < maxArity; j++) {
             ss << "a" << j << " = 0";
-            if (j != maxArity - 1) { ss << " && "; }
+            if (j != maxArity - 1) {
+                ss << " && ";
+            }
         }
         ss << "}";
         compositions.push_back(new Relation(ss.str()));
@@ -1625,7 +1645,9 @@ void Computation::padExecutionSchedules() {
             compositions[sched->outArity() - 1]->Compose(sched));
     }
 
-    for (Relation* rel : compositions) { delete rel; }
+    for (Relation* rel : compositions) {
+        delete rel;
+    }
 }
 
 void Computation::enforceArraySSA() {
@@ -1659,8 +1681,8 @@ void Computation::enforceArraySSA() {
                         unroll + " = " + access + ";",
                         stmt->getIterationSpace()->prettyPrintString(),
                         stmt->getExecutionSchedule()->prettyPrintString(),
-                        { {read, "{[0]->" + tuple + "}"} },
-                        { {unroll, "{[0]->[0]}"} }
+                    { {read, "{[0]->" + tuple + "}"} },
+                    { {unroll, "{[0]->[0]}"} }
                     );
                     unrollStmt->setDelimited();
                     unrollStmt->setArrayAccess(true);
@@ -1697,23 +1719,23 @@ void Computation::enforceArraySSA() {
     }
 
     // Array rerolling
-	auto activeOut = getActiveOutValues();
-	for (auto& pair : arrays) {
+    auto activeOut = getActiveOutValues();
+    for (auto& pair : arrays) {
         if (!activeOut.count(pair.first)) {
-        	continue;
-    	}
+            continue;
+        }
         for (auto& idxs : pair.second) {
             // Add the rerolling statement
             std::string unroll, access, tuple;
             getArrayAccessStrs(unroll, access, tuple,
-                pair.first, idxs);
+                               pair.first, idxs);
             // access = unroll;
             Stmt* rerollStmt = new Stmt(
                 access + " = " + unroll + ";",
                 "{[0]}",
                 "{[0]->[" + std::to_string(getNumStmts()) + "]}",
-                { {unroll, "{[0]->[0]}"} },
-                { {pair.first, "{[0]->" + tuple + "}"} }
+            { {unroll, "{[0]->[0]}"} },
+            { {pair.first, "{[0]->" + tuple + "}"} }
             );
             rerollStmt->setDelimited();
             rerollStmt->setArrayAccess(true);
@@ -1722,12 +1744,39 @@ void Computation::enforceArraySSA() {
     }
 }
 
+void Computation::resolvePhiNodes () {
+    CompGraph cg;
+    cg.create(this);
+    std::vector<int> deleteStmtIds;
+    std::vector<std::pair<std::string,std::string>> dataMacros;
+    cg.resolvePhiNodes(deleteStmtIds,dataMacros);
+
+    // Delete statements.
+    std::vector<Stmt*> toDelete;
+    for(int stmtId : deleteStmtIds) {
+        toDelete.push_back(getStmt(stmtId));
+    }
+
+    for(Stmt* st: toDelete) {
+        auto it = std::find(stmts.begin(),stmts.end(),st);
+        if (it != stmts.end()) {
+            stmts.erase(it);
+        }
+        delete st;
+    }
+
+
+}
 void Computation::adjustExecutionSchedules() {
-    if (getNumStmts() <= 0) { return; }
+    if (getNumStmts() <= 0) {
+        return;
+    }
     int maxArity = 0;
     for (int j = 0; j < getNumStmts(); j++) {
         int tmp = getStmt(j)->getExecutionSchedule()->outArity();
-        if (tmp > maxArity) { maxArity = tmp; }
+        if (tmp > maxArity) {
+            maxArity = tmp;
+        }
     }
     // Create tuples filled with 0's
     TupleDecl oldTuple(maxArity), lastTuple(maxArity);
@@ -1749,17 +1798,19 @@ void Computation::adjustExecutionSchedules() {
             int level = 0, diff = 0;
             while (level < outArity && diff == 0) {
                 if (currTuple.elemIsConst(level + inArity)
-                    && oldTuple.elemIsConst(level)) {
+                        && oldTuple.elemIsConst(level)) {
                     diff = currTuple.elemConstVal(level + inArity)
-                        - oldTuple.elemConstVal(level);
+                           - oldTuple.elemConstVal(level);
                 }
                 level += 2;
             }
-            if (diff != 0) { level -= 2; }
+            if (diff != 0) {
+                level -= 2;
+            }
             // Update oldTuple
             for( int j = 0; j < outArity; j++) {
                 oldTuple.setTupleElem(j,
-                    currTuple.elemConstVal(j + inArity));
+                                      currTuple.elemConstVal(j + inArity));
             }
             for (int j = outArity; j < maxArity; j++) {
                 oldTuple.setTupleElem(j, 0);
@@ -1767,32 +1818,32 @@ void Computation::adjustExecutionSchedules() {
             // Compute lastTuple + (currTuple - oldTuple)
             if (level < outArity && lastTuple.elemIsConst(level)) {
                 currTuple.setTupleElem(level + inArity,
-                    lastTuple.elemConstVal(level) + diff);
+                                       lastTuple.elemConstVal(level) + diff);
             }
             // Update dynamically inserted statements
             for (idx; idx < i; idx++) {
-				getStmt(idx)->setExecutionSchedule(new Relation(
-                    "{" + currTuple.toString(true, inArity) + "}"));
+                getStmt(idx)->setExecutionSchedule(new Relation(
+                                                       "{" + currTuple.toString(true, inArity) + "}"));
                 currTuple.setTupleElem(arity - 1,
-                    currTuple.elemConstVal(arity - 1) + 1);
+                                       currTuple.elemConstVal(arity - 1) + 1);
             }
             // Update the current statement
-			stmt->setExecutionSchedule(new Relation(
-               "{" + currTuple.toString(true, inArity) + "}"));
+            stmt->setExecutionSchedule(new Relation(
+                                           "{" + currTuple.toString(true, inArity) + "}"));
             idx++;
             // Update last tuple
             for( int j = 0; j < outArity; j++) {
                 lastTuple.setTupleElem(j,
-                    currTuple.elemConstVal(j + inArity));
+                                       currTuple.elemConstVal(j + inArity));
             }
             for (int j = outArity; j < maxArity; j++) {
                 lastTuple.setTupleElem(j, 0);
             }
         }
     }
-     
+
     // Handle any remaining dynamically added statements
-	int stmtNum = lastTuple.elemConstVal(0);
+    int stmtNum = lastTuple.elemConstVal(0);
 //    for (idx; idx < getNumStmts(); idx++) {
 //        std::cout<<"Why I am here"<<std::endl;
 //		getStmt(idx)->setExecutionSchedule(new Relation(
@@ -1800,7 +1851,7 @@ void Computation::adjustExecutionSchedules() {
 //    }
 }
 
-void Computation::deleteDeadStatements(){
+void Computation::deleteDeadStatements() {
     CompGraph graph;
     graph.create(this);
     std::vector<int> deadStmts;
@@ -1808,32 +1859,32 @@ void Computation::deleteDeadStatements(){
     graph.removeDeadNodes(deadStmts,deadDataSpaces);
 
 
-    for(std::string data: deadDataSpaces){
+    for(std::string data: deadDataSpaces) {
 
-	auto it = dataSpaces.find(data);
-        if(it != dataSpaces.end()){
-	    dataSpaces.erase(it);
-	}
+        auto it = dataSpaces.find(data);
+        if(it != dataSpaces.end()) {
+            dataSpaces.erase(it);
+        }
     }
 
     // Delete statements.
     std::vector<Stmt*> toDelete;
-    for(int stmtId : deadStmts){
+    for(int stmtId : deadStmts) {
         toDelete.push_back(getStmt(stmtId));
     }
 
-    for(Stmt* st: toDelete){
+    for(Stmt* st: toDelete) {
         auto it = std::find(stmts.begin(),stmts.end(),st);
-	if (it != stmts.end()){
-	    stmts.erase(it);
-	}
-	delete st;
+        if (it != stmts.end()) {
+            stmts.erase(it);
+        }
+        delete st;
     }
 }
 
 std::string Computation::toDotString(bool reducePCRelations,
-		bool toPoint, bool onlyLoopLevels, bool addDebugStmts,
-		std::string subgraphSrc, bool subgraphReads,bool subgraphWrites) {
+                                     bool toPoint, bool onlyLoopLevels, bool addDebugStmts,
+                                     std::string subgraphSrc, bool subgraphReads,bool subgraphWrites) {
     //TODO: Deal with disjunction of conjunctions later.
 
     CompGraph graph = CompGraph();
@@ -1841,18 +1892,18 @@ std::string Computation::toDotString(bool reducePCRelations,
     if (reducePCRelations) {
         graph.reducePCRelations();
     }
-    if(toPoint){
+    if(toPoint) {
         graph.reduceNodes(true, true, 0);
     }
-    if(onlyLoopLevels){
+    if(onlyLoopLevels) {
         graph.removeNodes(0);
     }
 
-    if(addDebugStmts){
+    if(addDebugStmts) {
         graph.addDebugStmts(getStmtDebugStrings());
     }
 
-    if(!subgraphSrc.empty()){
+    if(!subgraphSrc.empty()) {
         try {
             int stmtIdx = std::stoi(subgraphSrc);
             return graph.toDotString(stmtIdx, subgraphReads, subgraphWrites);
@@ -1868,7 +1919,9 @@ std::vector<std::pair<int, std::string>> Computation::getStmtDebugStrings() {
     std::vector<std::pair<int, std::string>> result;
     for (int i = 0; i < getNumStmts(); i++) {
         std::string debugStr = getStmt(i)->getAllDebugStr();
-        if (!debugStr.empty()) { result.push_back({i, debugStr}); }
+        if (!debugStr.empty()) {
+            result.push_back({i, debugStr});
+        }
     }
     return result;
 }
@@ -1884,7 +1937,7 @@ std::vector<Set*> Computation::applyTransformations() {
     for (int stmtNum = 0; stmtNum < getNumStmts(); ++stmtNum) {
 
         Set* schedule = transformations[stmtNum]->Apply(
-            getStmt(stmtNum)->getIterationSpace());
+                            getStmt(stmtNum)->getIterationSpace());
         transformedSchedules.push_back(schedule);
         delete transformations[stmtNum];
     }
@@ -1914,7 +1967,7 @@ std::vector<std::pair<int, Set*>> Computation::getIterSpaces() {
     std::vector<Set*> transformedSpaces = applyTransformations();
     if (!consistentSetArity(transformedSpaces)) {
         std::cerr << "Iteration spaces do not have a consistent arity" << std::endl;
-        for(Set* set : transformedSpaces){
+        for(Set* set : transformedSpaces) {
             delete set;
         }
         return {};
@@ -1924,13 +1977,13 @@ std::vector<std::pair<int, Set*>> Computation::getIterSpaces() {
     // to their transformed spaces.
     std::vector<std::pair<int,Set*>> newIS;
 
-    for(int i = 0; i < transformedSpaces.size(); i++){
-	newIS.push_back(std::make_pair(i,transformedSpaces[i]));
+    for(int i = 0; i < transformedSpaces.size(); i++) {
+        newIS.push_back(std::make_pair(i,transformedSpaces[i]));
     }
 
     // Sort by lexicographical order
     std::sort(newIS.begin(),newIS.end(),
-		    Computation::activeStatementComparator);
+              Computation::activeStatementComparator);
 
     return newIS;
 }
@@ -1942,10 +1995,10 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
     // convert sets/relations to Omega format for use in codegen, and
     // collect statement macro definitions
-    VisitorChangeUFsForOmega* vOmegaReplacer = 
-	    new VisitorChangeUFsForOmega();
-    FlattenUFNestingVisitor* flatner = 
-	    new FlattenUFNestingVisitor();
+    VisitorChangeUFsForOmega* vOmegaReplacer =
+        new VisitorChangeUFsForOmega();
+    FlattenUFNestingVisitor* flatner =
+        new FlattenUFNestingVisitor();
     std::ostringstream stmtMacroUndefs;
     std::ostringstream stmtMacroDefs;
     int stmtCount = 0;
@@ -1960,18 +2013,18 @@ std::string Computation::codeGen(Set* knownConstraints) {
 
         // Generate the first macro based on the original iteration space
         Set* iterSpace = stmt->getIterationSpace();
-        
-	stmtMacroDefs << "#define s_" << stmtCount << "("
+
+        stmtMacroDefs << "#define s_" << stmtCount << "("
                       << iterSpace->getTupleDecl().toString() << ")   "
                       << Computation::stripDataSpaceDelimiter
-		      (stmt->getStmtSourceCode())
+                      (stmt->getStmtSourceCode())
                       << " \n";
 
         // Get the new iteration space set
         Set* newIterSpace = rel->Apply(stmt->getIterationSpace());
         // Flatten UF Nesting
-	newIterSpace->acceptVisitor(flatner);
-        // Enforce prefix rule	
+        newIterSpace->acceptVisitor(flatner);
+        // Enforce prefix rule
         newIterSpace->acceptVisitor(vOmegaReplacer);
         // Generate the second macro based on the new iteration space
         // Generate a mapping between the two iteration spaces using
@@ -1984,7 +2037,9 @@ std::string Computation::codeGen(Set* knownConstraints) {
         TupleDecl decl = rel->getTupleDecl();
         for (int i = 0; i < rel->inArity(); i++) {
             // Handle commas
-            if (!first) { stmtMacroDefs << ", "; }
+            if (!first) {
+                stmtMacroDefs << ", ";
+            }
 
             // Get the expression
             Exp* e = rel->findFunction(i, rel->inArity(), rel->arity());
@@ -1992,8 +2047,10 @@ std::string Computation::codeGen(Set* knownConstraints) {
             // If e->equalZero = true, the expression may have no terms
             // and prettyPrintString will print '', not '0'
             stmtMacroDefs << (e && !e->equalsZero() ?
-                e->prettyPrintString(decl) : "0");
-            if (e) { delete e; }
+                              e->prettyPrintString(decl) : "0");
+            if (e) {
+                delete e;
+            }
 
             first = false;
         }
@@ -2001,43 +2058,43 @@ std::string Computation::codeGen(Set* knownConstraints) {
         stmtCount++;
 
         // new Codegen would require an application
-	// be performed first before the set is sent
-	// to omega. This is a temporary solution to
-	// circumvent Omega's schedulling bug.
+        // be performed first before the set is sent
+        // to omega. This is a temporary solution to
+        // circumvent Omega's schedulling bug.
         std::string omegaIterString =
             newIterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
         iterSpaces.push_back(omegaIterString);
 
         // Use identity transformation instead.
         //transforms.push_back(omega::Identity(iterSpace->arity()));
-	arity.push_back(newIterSpace->arity());
+        arity.push_back(newIterSpace->arity());
 
         delete newIterSpace;
-    	delete rel;
+        delete rel;
     }
 
     // define necessary macros collected from statements
     std::ostringstream UFMacroUndefs;
     std::ostringstream UFMacroDefs;
     for (const auto& macro : *vOmegaReplacer->getUFMacros()) {
-        UFMacroDefs << "#define " << macro.first << " " 
-		<< macro.second << "\n";
+        UFMacroDefs << "#define " << macro.first << " "
+                    << macro.second << "\n";
     }
     // Create undefs
-    
-    for (const auto& macro: vOmegaReplacer->getUFMap()){
-        
+
+    for (const auto& macro: vOmegaReplacer->getUFMap()) {
+
         UFMacroUndefs << "#undef " << macro.first << "\n";
     }
-    
+
     generatedCode << stmtMacroUndefs.str() << stmtMacroDefs.str() << "\n";
     generatedCode << UFMacroUndefs.str() << UFMacroDefs.str() << "\n";
 
     // initialize tuple variables
     std::ostringstream TupleAssignments;
-    for(const auto& tupleA: vOmegaReplacer->getTupleAssignments()){
+    for(const auto& tupleA: vOmegaReplacer->getTupleAssignments()) {
         TupleAssignments << "t" << (tupleA.first + 1) << " = "
-		<< tupleA.second << "; \n";
+                         << tupleA.second << "; \n";
     }
     generatedCode << TupleAssignments.str() << "\n";
 
@@ -2065,12 +2122,12 @@ std::string Computation::codeGen(Set* knownConstraints) {
     return stripDataSpaceDelimiter(generatedCode.str());
 }
 
-std::string Computation::omegaCodeGenFromString(std::vector<int> relationArity, std::vector<std::string> iterSpacesStr, std::string known){
+std::string Computation::omegaCodeGenFromString(std::vector<int> relationArity, std::vector<std::string> iterSpacesStr, std::string known) {
     std::ostringstream generatedCode;
     std::vector<omega::Relation> iterSpaces;
     std::vector<omega::Relation> transforms;
 
-    for(int i=0; i<iterSpacesStr.size(); i++){
+    for(int i=0; i<iterSpacesStr.size(); i++) {
         std::string omegaIterString = iterSpacesStr[i];
         omega::Relation* omegaIterSpace =
             omega::parser::ParseRelation(Computation::stripDataSpaceDelimiter(omegaIterString));
@@ -2114,21 +2171,21 @@ std::string Computation::toOmegaString() {
         omegaString << stmt->getStmtSourceCode() << "\n";
         stmtCount++;
 
-	// new Codegen would require an application
-	// be performed first before the set is sent
-	// to omega. This is a temporary solution to
-	// circumvent Omega's schedulling bug.
+        // new Codegen would require an application
+        // be performed first before the set is sent
+        // to omega. This is a temporary solution to
+        // circumvent Omega's schedulling bug.
         Set * iterSpace = stmt->getExecutionSchedule()->
-		Apply(stmt->getIterationSpace());
-	iterSpace->acceptVisitor(flattner);
-	iterSpace->acceptVisitor(vOmegaReplacer);
+                          Apply(stmt->getIterationSpace());
+        iterSpace->acceptVisitor(flattner);
+        iterSpace->acceptVisitor(vOmegaReplacer);
 
         std::string omegaIterString =
             iterSpace->toOmegaString(vOmegaReplacer->getUFCallDecls());
         omegaString << "Domain\n";
-	omegaString << omegaIterString << "\n";
+        omegaString << omegaIterString << "\n";
 
-	delete iterSpace;
+        delete iterSpace;
     }
 
     delete vOmegaReplacer;
@@ -2140,7 +2197,7 @@ bool Computation::assertValidDataSpaceName(const std::string &name, bool already
     if (name.empty() || (alreadyDelimited && name.length() < 3)) {
         errorMsg = "Data space names must be nonempty.";
     } else if (alreadyDelimited &&
-        (name.at(1) == DATA_SPACE_DELIMITER || name.at(name.length() - 2) == DATA_SPACE_DELIMITER)) {
+               (name.at(1) == DATA_SPACE_DELIMITER || name.at(name.length() - 2) == DATA_SPACE_DELIMITER)) {
         errorMsg = "Data space appears to be delimited twice. This is a bug.";
     }
 
@@ -2150,14 +2207,14 @@ bool Computation::assertValidDataSpaceName(const std::string &name, bool already
     return true;
 }
 
-int Computation::firstWriteIndex(std::string dataSpace){
+int Computation::firstWriteIndex(std::string dataSpace) {
     for(int i = 0; i < getNumStmts(); i++) {
         for(int data_write_index = 0;
                 data_write_index < getStmt(i)->getNumWrites();
                 data_write_index++) {
 
             string writeDataSpace = getStmt(i)->getWriteDataSpace(data_write_index);
-            if(dataSpace == writeDataSpace){
+            if(dataSpace == writeDataSpace) {
                 return i;
             }
         }
@@ -2165,14 +2222,14 @@ int Computation::firstWriteIndex(std::string dataSpace){
     return -1;
 }
 
-void Computation::replaceDataSpaceName(std::string original, std::string newString){
+void Computation::replaceDataSpaceName(std::string original, std::string newString) {
     std::string searchString;
     std::string replacedString;
-    if(nameIsDelimited(original)){
+    if(nameIsDelimited(original)) {
         searchString = original;
         replacedString = newString;
     }
-    else{
+    else {
         searchString = Computation::delimitDataSpaceName(original);
         replacedString = Computation::delimitDataSpaceName(newString);
     }
@@ -2183,7 +2240,7 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
     //to save a copy
     auto iterator = dataSpaces.find(searchString);
     //auto iterator = std::find(dataSpaces.begin(), dataSpaces.end(), searchString);
-    if(iterator != dataSpaces.end()){
+    if(iterator != dataSpaces.end()) {
         dataSpaces.erase(iterator);
     }
     auto original_iterator = undelimitedDataSpaceNames.find(trimDataSpaceName(original));
@@ -2192,22 +2249,26 @@ void Computation::replaceDataSpaceName(std::string original, std::string newStri
     }
 
     //Rename return values as well
-    for (auto it = returnValues.begin(); it != returnValues.end(); it++){
-        if (it->first == original) { it->first = newString; }
+    for (auto it = returnValues.begin(); it != returnValues.end(); it++) {
+        if (it->first == original) {
+            it->first = newString;
+        }
     }
     for (auto it = parameters.begin(); it != parameters.end(); it++) {
-        if (*it == original) { *it = newString; }
+        if (*it == original) {
+            *it = newString;
+        }
     }
 }
 
 std::string Computation::getDataSpaceRename(std::string dataSpaceName) {
     dataSpaceName = trimDataSpaceName(dataSpaceName);
     return Computation::delimitDataSpaceName(dataSpaceName + DATA_RENAME_STR
-        + std::to_string(this->numDataSpaceRenames++));
+            + std::to_string(this->numDataSpaceRenames++));
 }
 
 void Computation::getArrayAccessStrs(std::string& unroll, std::string& access,
-    std::string& tuple, std::string arrName, const std::list<int>& idxs) {
+                                     std::string& tuple, std::string arrName, const std::list<int>& idxs) {
     std::ostringstream unrollOS, accessOS, tupleOS;
     unrollOS << "$" << trimDataSpaceName(arrName);
     accessOS << arrName;
@@ -2215,7 +2276,9 @@ void Computation::getArrayAccessStrs(std::string& unroll, std::string& access,
     for (auto it = idxs.begin(); it != idxs.end(); it++) {
         unrollOS << ARR_ACCESS_STR << *it;
         accessOS << "[" << *it << "]";
-        if (it != idxs.begin()) { tupleOS << ", "; }
+        if (it != idxs.begin()) {
+            tupleOS << ", ";
+        }
         tupleOS << *it;
     }
     unrollOS << "$";
@@ -2236,8 +2299,8 @@ bool Computation::isConstArray(std::string dataSpaceName) {
 
 std::string Computation::trimDataSpaceName(std::string dataSpaceName) {
     return nameIsDelimited(dataSpaceName) ?
-        dataSpaceName.substr(1, dataSpaceName.length() - 2)
-        : dataSpaceName;
+           dataSpaceName.substr(1, dataSpaceName.length() - 2)
+           : dataSpaceName;
 }
 
 std::string Computation::getOriginalDataSpaceName(std::string dataSpaceName) {
@@ -2274,17 +2337,19 @@ Stmt::Stmt(std::string stmtSourceCode, std::string iterationSpaceStr,
     setExecutionSchedule(executionScheduleStr);
     for (const auto& readInfo : dataReadsStrs) {
         dataReads.push_back(
-            {readInfo.first,
-             std::unique_ptr<Relation>(new Relation(readInfo.second))});
+        {   readInfo.first,
+            std::unique_ptr<Relation>(new Relation(readInfo.second))});
     }
     for (const auto& writeInfo : dataWritesStrs) {
         dataWrites.push_back(
-            {writeInfo.first,
-             std::unique_ptr<Relation>(new Relation(writeInfo.second))});
+        {   writeInfo.first,
+            std::unique_ptr<Relation>(new Relation(writeInfo.second))});
     }
 };
 
-Stmt::Stmt(const Stmt& other) { *this = other; }
+Stmt::Stmt(const Stmt& other) {
+    *this = other;
+}
 
 Stmt& Stmt::operator=(const Stmt& other) {
     this->stmtSourceCode = other.stmtSourceCode;
@@ -2293,13 +2358,13 @@ Stmt& Stmt::operator=(const Stmt& other) {
         std::unique_ptr<Relation>(new Relation(*other.executionSchedule));
     for (const auto& readInfo : other.dataReads) {
         this->dataReads.push_back(
-            {readInfo.first,
-             std::unique_ptr<Relation>(new Relation(*readInfo.second))});
+        {   readInfo.first,
+            std::unique_ptr<Relation>(new Relation(*readInfo.second))});
     }
     for (const auto& writeInfo : other.dataWrites) {
         this->dataWrites.push_back(
-            {writeInfo.first,
-             std::unique_ptr<Relation>(new Relation(*writeInfo.second))});
+        {   writeInfo.first,
+            std::unique_ptr<Relation>(new Relation(*writeInfo.second))});
     }
     this->phiNode = other.phiNode;
     this->arrayAccess = other.arrayAccess;
@@ -2314,32 +2379,38 @@ bool Stmt::operator==(const Stmt& other) const {
     } else {
         for (unsigned int i = 0; i < this->getNumReads(); ++i) {
             if (this->getReadDataSpace(i) != other.getReadDataSpace(i)
-            || *this->getReadRelation(i) != *other.getReadRelation(i)) {
+                    || *this->getReadRelation(i) != *other.getReadRelation(i)) {
                 accessesEqual = false;
             }
         }
         for (unsigned int i = 0; i < this->getNumWrites(); ++i) {
             if (this->getWriteDataSpace(i) != other.getWriteDataSpace(i)
-                || *this->getWriteRelation(i) != *other.getWriteRelation(i)) {
+                    || *this->getWriteRelation(i) != *other.getWriteRelation(i)) {
                 accessesEqual = false;
             }
         }
     }
 
     return (
-        this->phiNode == other.phiNode &&
-        this->arrayAccess == other.arrayAccess &&
-        this->stmtSourceCode == other.stmtSourceCode &&
-        *this->iterationSpace == *other.iterationSpace &&
-        *this->executionSchedule == *other.executionSchedule &&
-        accessesEqual
-    );
+               this->phiNode == other.phiNode &&
+               this->arrayAccess == other.arrayAccess &&
+               this->stmtSourceCode == other.stmtSourceCode &&
+               *this->iterationSpace == *other.iterationSpace &&
+               *this->executionSchedule == *other.executionSchedule &&
+               accessesEqual
+           );
 }
 
 void Stmt::replaceRead(std::string searchStr, std::string replaceStr) {
-    if (searchStr == "") { return; }
-    if (searchStr[0] != '$') { searchStr = "$" + searchStr + "$"; }
-    if (replaceStr == "" || replaceStr[0] != '$') { replaceStr = "$" + replaceStr + "$"; }
+    if (searchStr == "") {
+        return;
+    }
+    if (searchStr[0] != '$') {
+        searchStr = "$" + searchStr + "$";
+    }
+    if (replaceStr == "" || replaceStr[0] != '$') {
+        replaceStr = "$" + replaceStr + "$";
+    }
 
     replaceReadDataSpace(searchStr, replaceStr);
     replaceReadSourceCode(searchStr, replaceStr);
@@ -2352,7 +2423,7 @@ void Stmt::replaceReadDataSpace(std::string searchStr, std::string replaceStr) {
         }
     }
 }
-void Stmt::removeReadDataSpace(int loc){
+void Stmt::removeReadDataSpace(int loc) {
     dataReads.erase(dataReads.begin()+loc);
 }
 
@@ -2365,27 +2436,32 @@ void Stmt::replaceReadSourceCode(std::string searchStr, std::string replaceStr) 
     std::ostringstream os;
     size_t idx = 0, pos1, pos2;
     do {
-        pos1 = srcCode.find("=", idx); pos2 = srcCode.find(";", idx);
+        pos1 = srcCode.find("=", idx);
+        pos2 = srcCode.find(";", idx);
         bool noEq = pos1 == std::string::npos;
         bool noSemi = pos2 == std::string::npos;
         // Avoid overflow (max size_t - 0 + 1)
-        if (noEq) { pos1--; }
-        if (noSemi) { pos2--; }
+        if (noEq) {
+            pos1--;
+        }
+        if (noSemi) {
+            pos2--;
+        }
         // No '=' or '=' after ';', don't replace
         if (noEq || pos1 > pos2) {
             os << srcCode.substr(idx, pos2 - idx + 1);
             idx = pos2 + 1;
-        // Yes '=', replace
+            // Yes '=', replace
         } else {
             // Make sure it's not '==' or '<op>='
             bool notEqEq = pos1 + 1 >= srcCode.size()
-                || srcCode[pos1 + 1] != '=';
+                           || srcCode[pos1 + 1] != '=';
             bool notSelfEq = pos1 - 1 < 0 || isalnum(srcCode[pos1 - 1])
-                || srcCode[pos1 - 1] == ' ' || srcCode[pos1 - 1] == '_';
+                             || srcCode[pos1 - 1] == ' ' || srcCode[pos1 - 1] == '_';
             if (notEqEq && notSelfEq) {
                 os << srcCode.substr(idx, pos1 - idx)
-                    << replaceInString(srcCode.substr(pos1, pos2 - pos1 + 1),
-                        searchStr, replaceStr);
+                   << replaceInString(srcCode.substr(pos1, pos2 - pos1 + 1),
+                                      searchStr, replaceStr);
                 idx = pos2 + 1;
             } else {
                 os << srcCode.substr(idx, pos1 - idx + 1);
@@ -2397,9 +2473,15 @@ void Stmt::replaceReadSourceCode(std::string searchStr, std::string replaceStr) 
 }
 
 void Stmt::replaceWrite(std::string searchStr, std::string replaceStr) {
-    if (searchStr == "") { return; }
-    if (searchStr[0] != '$') { searchStr = "$" + searchStr + "$"; }
-    if (replaceStr == "" || replaceStr[0] != '$') { replaceStr = "$" + replaceStr + "$"; }
+    if (searchStr == "") {
+        return;
+    }
+    if (searchStr[0] != '$') {
+        searchStr = "$" + searchStr + "$";
+    }
+    if (replaceStr == "" || replaceStr[0] != '$') {
+        replaceStr = "$" + replaceStr + "$";
+    }
 
     replaceWriteDataSpace(searchStr, replaceStr);
     replaceWriteSourceCode(searchStr, replaceStr);
@@ -2421,32 +2503,37 @@ void Stmt::replaceWriteSourceCode(std::string searchStr, std::string replaceStr)
     std::ostringstream os;
     size_t idx = 0, pos1, pos2;
     do {
-        pos1 = srcCode.find("=", idx); pos2 = srcCode.find(";", idx);
+        pos1 = srcCode.find("=", idx);
+        pos2 = srcCode.find(";", idx);
         bool noEq = pos1 == std::string::npos;
         bool noSemi = pos2 == std::string::npos;
         // Avoid overflow (max size_t - 0 + 1)
-        if (noEq) { pos1--; }
-        if (noSemi) { pos2--; }
+        if (noEq) {
+            pos1--;
+        }
+        if (noSemi) {
+            pos2--;
+        }
         // No '=' or '=' after ';', replace to ';'
         if (noEq || pos1 > pos2) {
             os << replaceInString(srcCode.substr(idx, pos2 - idx + 1),
-                searchStr, replaceStr);
+                                  searchStr, replaceStr);
             idx = pos2 + 1;
-        // Yes '=', replace to '=', skip '=' to ';'
+            // Yes '=', replace to '=', skip '=' to ';'
         } else {
             // Make sure it's not '==' or '<op>='
             bool notEqEq = pos1 + 1 >= srcCode.size()
-                || srcCode[pos1 + 1] != '=';
+                           || srcCode[pos1 + 1] != '=';
             bool notSelfEq = pos1 - 1 < 0 || isalnum(srcCode[pos1 - 1])
-                || srcCode[pos1 - 1] == ' ' || srcCode[pos1 - 1] == '_';
+                             || srcCode[pos1 - 1] == ' ' || srcCode[pos1 - 1] == '_';
             if (notEqEq && notSelfEq) {
                 os << replaceInString(srcCode.substr(idx, pos1 - idx),
-                    searchStr, replaceStr)
-                    << srcCode.substr(pos1, pos2 - pos1 + 1);
+                                      searchStr, replaceStr)
+                   << srcCode.substr(pos1, pos2 - pos1 + 1);
                 idx = pos2 + 1;
             } else {
                 os << replaceInString(srcCode.substr(idx, pos1 - idx),
-                    searchStr, replaceStr);
+                                      searchStr, replaceStr);
                 idx = pos1 + 1;
             }
         }
@@ -2455,7 +2542,9 @@ void Stmt::replaceWriteSourceCode(std::string searchStr, std::string replaceStr)
 }
 
 void Stmt::replaceDataSpace(std::string searchString, std::string replaceString) {
-    if (searchString == "") { return; }
+    if (searchString == "") {
+        return;
+    }
 
     std::string oldSourceCode = getStmtSourceCode();
     std::string newSourceCode;
@@ -2463,12 +2552,16 @@ void Stmt::replaceDataSpace(std::string searchString, std::string replaceString)
     setStmtSourceCode(newSourceCode);
 
     for (auto& write : dataWrites) {
-        if (write.first == searchString) { write.first = replaceString; }
+        if (write.first == searchString) {
+            write.first = replaceString;
+        }
     }
     for (auto& read : dataReads) {
-        if (read.first == searchString) { read.first = replaceString; }
+        if (read.first == searchString) {
+            read.first = replaceString;
+        }
     }
-    //Rename data space in iteration space 
+    //Rename data space in iteration space
     std::string iterStr = iterationSpace->getString();
     iterStr = iegenlib::replaceInString(iterStr, searchString, replaceString);
     iterationSpace.reset(new Set(iterStr));
@@ -2516,13 +2609,17 @@ bool Stmt::isComplete() const {
     return !stmtSourceCode.empty() && iterationSpace && executionSchedule;
 }
 
-std::string Stmt::getStmtSourceCode() const { return stmtSourceCode; }
+std::string Stmt::getStmtSourceCode() const {
+    return stmtSourceCode;
+}
 
 void Stmt::setStmtSourceCode(std::string newStmtSourceCode) {
     this->stmtSourceCode = newStmtSourceCode;
 }
 
-Set* Stmt::getIterationSpace() const { return iterationSpace.get(); }
+Set* Stmt::getIterationSpace() const {
+    return iterationSpace.get();
+}
 
 void Stmt::setIterationSpace(std::string newIterationSpaceStr) {
     this->iterationSpace = std::unique_ptr<Set>(new Set(newIterationSpaceStr));
@@ -2532,26 +2629,28 @@ void Stmt::setIterationSpace(Set* newIterationSpace) {
     this->iterationSpace = std::unique_ptr<Set>(newIterationSpace);
 }
 
-Relation* Stmt::getExecutionSchedule() const { return executionSchedule.get(); }
+Relation* Stmt::getExecutionSchedule() const {
+    return executionSchedule.get();
+}
 
 void Stmt::setExecutionSchedule(std::string newExecutionScheduleStr) {
     this->executionSchedule =
-            std::unique_ptr<Relation>(new Relation(newExecutionScheduleStr));
+        std::unique_ptr<Relation>(new Relation(newExecutionScheduleStr));
 }
 
 void Stmt::setExecutionSchedule(Relation* newExecutionSchedule) {
     this->executionSchedule =
-            std::unique_ptr<Relation>(newExecutionSchedule);
+        std::unique_ptr<Relation>(newExecutionSchedule);
 }
 
 void Stmt::addRead(std::string dataSpace, std::string relationStr) {
     dataReads.push_back(
-        {dataSpace, std::unique_ptr<Relation>(new Relation(relationStr))});
+    {dataSpace, std::unique_ptr<Relation>(new Relation(relationStr))});
 }
 
 void Stmt::addRead(std::string dataSpace, Relation* relation) {
     dataReads.push_back(
-        {dataSpace, std::unique_ptr<Relation>(relation)});
+    {dataSpace, std::unique_ptr<Relation>(relation)});
 }
 
 void Stmt::updateRead(int idx, std::string dataSpace, std::string relationStr) {
@@ -2559,7 +2658,9 @@ void Stmt::updateRead(int idx, std::string dataSpace, std::string relationStr) {
     dataReads.at(idx).second = std::unique_ptr<Relation>(new Relation(relationStr));
 }
 
-unsigned int Stmt::getNumReads() const { return dataReads.size(); }
+unsigned int Stmt::getNumReads() const {
+    return dataReads.size();
+}
 
 std::string Stmt::getReadDataSpace(unsigned int index) const {
     return dataReads.at(index).first;
@@ -2571,12 +2672,12 @@ Relation* Stmt::getReadRelation(unsigned int index) const {
 
 void Stmt::addWrite(std::string dataSpace, std::string relationStr) {
     dataWrites.push_back(
-        {dataSpace, std::unique_ptr<Relation>(new Relation(relationStr))});
+    {dataSpace, std::unique_ptr<Relation>(new Relation(relationStr))});
 }
 
 void Stmt::addWrite(std::string dataSpace, Relation* relation) {
     dataWrites.push_back(
-        {dataSpace, std::unique_ptr<Relation>(relation)});
+    {dataSpace, std::unique_ptr<Relation>(relation)});
 }
 
 void Stmt::updateWrite(int idx, std::string dataSpace, std::string relationStr) {
@@ -2584,7 +2685,9 @@ void Stmt::updateWrite(int idx, std::string dataSpace, std::string relationStr) 
     dataWrites.at(idx).second = std::unique_ptr<Relation>(new Relation(relationStr));
 }
 
-unsigned int Stmt::getNumWrites() const { return dataWrites.size(); }
+unsigned int Stmt::getNumWrites() const {
+    return dataWrites.size();
+}
 
 std::string Stmt::getWriteDataSpace(unsigned int index) const {
     return dataWrites.at(index).first;
@@ -2597,9 +2700,9 @@ Relation* Stmt::getWriteRelation(unsigned int index) const {
 std::list<int> Stmt::getConstArrayAccesses(unsigned int index, bool read) const {
     // Get the data space and scheduling function
     std::string dataSpace = read ? getReadDataSpace(index)
-        : getWriteDataSpace(index);
+                            : getWriteDataSpace(index);
     Relation* schedFunc = read ? getReadRelation(index)
-        : getWriteRelation(index);
+                          : getWriteRelation(index);
 
     // Get all constant elements in the relation tuple
     // If an iterator is found, remove all clear the list
@@ -2627,7 +2730,7 @@ std::list<int> Stmt::getConstArrayAccesses(unsigned int index, bool read) const 
     return accessVals;
 }
 
-void Stmt::setDebugStr(std::string str){
+void Stmt::setDebugStr(std::string str) {
     debug.push_back(str);
 }
 
@@ -2635,11 +2738,13 @@ std::string Stmt::getDebugStr() const {
     return debug.front();
 }
 
-std::string Stmt::getAllDebugStr() const{
+std::string Stmt::getAllDebugStr() const {
     std::ostringstream ss;
-    for(int i = 0; i < debug.size(); ++i){
-       if (i != 0){ss << "\n";}
-       ss << debug[i];
+    for(int i = 0; i < debug.size(); ++i) {
+        if (i != 0) {
+            ss << "\n";
+        }
+        ss << debug[i];
     }
     return ss.str();
 }
@@ -2662,8 +2767,8 @@ std::string Stmt::prettyPrintString() const {
         ss << "{\n";
         for (unsigned int i = 0; i < numReads; ++i) {
             ss << "    " << getReadDataSpace(i) << ": "
-                         << getReadRelation(i)->prettyPrintString()
-                         << "\n";
+               << getReadRelation(i)->prettyPrintString()
+               << "\n";
         }
         ss << "}";
     }
@@ -2677,8 +2782,8 @@ std::string Stmt::prettyPrintString() const {
         ss << "{\n";
         for (unsigned int i = 0; i < numWrites; ++i) {
             ss << "    " << getWriteDataSpace(i) << ": "
-                         << getWriteRelation(i)->prettyPrintString()
-                         << "\n";
+               << getWriteRelation(i)->prettyPrintString()
+               << "\n";
         }
         ss << "}";
     }

@@ -166,14 +166,115 @@ TEST(SSATest123, DominanceTreeTEST111){
             {{"x", "{[0]->[0]}"}},
             {{"x", "{[0]->[0]}"}}
     ));
-    //SSA::generateSSA(comp);
+    SSA::generateSSA(comp);
+    
     comp->finalize();
-    //comp->printInfo();
-    std::cout << comp->codeGen();
     std:: cout << comp->toDotString();
+    //comp->printInfo();
+    //std::cout << comp->codeGen();
+    //std:: cout << comp->toDotString();
     EXPECT_EQ(1,1);
 
 }
+
+
+TEST(SSATest123, RESOLVE_PHI_NODES_TEST){
+
+
+    Computation * comp = new Computation();
+    comp->addDataSpace("x", "int");
+    comp->addStmt(new Stmt (
+            "x = 1;",
+            "{[0]}",
+            "{[0]->[0]}",
+            {},
+            {{"x", "{[0]->[0]}"}}
+    ));
+    comp->addStmt(new Stmt (
+            "x = 2;",
+            "{[0]}",
+            "{[0]->[1]}",
+            {{"x", "{[0]->[0]}"}},
+            {{"x", "{[0]->[0]}"}}
+    ));
+    comp->addStmt(new Stmt (
+            "x = 2;",
+            "{[t,p]:0<=t<M && p> 10}",
+            "{[t,p]->[2,t,0,p,0]}",
+            {{"x", "{[t,p]->[t,p]}"}},
+            {{"x", "{[t,p]->[t,p]}"}}
+    ));
+    comp->addStmt(new Stmt (
+            "x = 2;",
+            "{[t,p,q]:0<=t<M && p>10 && q>10}",
+            "{[t,p,q]->[2,t,0,p,1,q,0]}",
+            {{"x", "{[t,p,q]->[t,p,q]}"}},
+            {{"x", "{[t,p,q]->[t,p,q]}"}}
+    ));
+    comp->addStmt(new Stmt (
+            "x = 2;",
+            "{[t,p,v]:0<=t<M && p>10 && v<=10}",
+            "{[t,p,v]->[2,t,0,p,1,v,0]}",
+            {{"x", "{[t,p,v]->[t,p,v]}"}},
+            {{"x", "{[t,p,v]->[t,p,v]}"}}
+    ));
+    comp->addStmt(new Stmt (
+            "x = 2;",
+            "{[t,p]:0<=t<M && p>10}",
+            "{[t,p]->[2,t,0,p,2]}",
+            {{"x", "{[t,p]->[t,p]}"}},
+            {{"x", "{[t,p]->[t,p]}"}}
+    ));
+    comp->addStmt(new Stmt (
+            "x = 2;",
+            "{[t,u]:0<=t<M && u<=10}",
+            "{[t,u]->[2,t,0,u,0]}",
+            {{"x", "{[t,u]->[t,u]}"}},
+            {{"x", "{[t,u]->[t,u]}"}}
+    ));
+    comp->addStmt(new Stmt (
+            "x = 2;",
+            "{[t]:0<=t<M}",
+            "{[t]->[2,t,1]}",
+            {{"x", "{[t]->[t]}"}},
+            {{"x", "{[t]->[t]}"}}
+    ));
+    comp->addStmt(new Stmt (
+            "x = 2;",
+            "{[t,s,r]:0<=t<M && s>10 && r>20}",
+            "{[t,s,r]->[2,t,3,s,0,r,0]}",
+            {{"x", "{[t,s,r]->[t,s,r]}"}},
+            {{"x", "{[t,s,r]->[t,s,r]}"}}
+    ));
+
+    comp->addStmt(new Stmt (
+            "x = 2;",
+            "{[t]:0<=t<M}",
+            "{[t]->[2,t,4]}",
+            {{"x", "{[t]->[t]}"}},
+            {{"x", "{[t]->[t]}"}}
+    ));
+    comp->addStmt(new Stmt (
+            "x = 2;",
+            "{[0]}",
+            "{[0]->[3]}",
+            {{"x", "{[0]->[0]}"}},
+            {{"x", "{[0]->[0]}"}}
+    ));
+    SSA::generateSSA(comp);
+    
+    comp->finalize();
+    std:: cout << comp->toDotString();
+    std::cout << "Phi Nodes Resolve \n";
+    comp->resolvePhiNodes(); 
+    std::cout << "After PhiNode Resolution\n";
+    std::cout << comp->toDotString();
+    EXPECT_EQ(1,1);
+
+}
+
+
+
 
 TEST(SSATest,AllPossiblePathsTest){
     Computation * comp = new Computation();

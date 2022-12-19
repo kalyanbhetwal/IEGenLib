@@ -231,6 +231,9 @@ class Computation {
     //  dynamically added statements.
     //  Ordering of inputted statements is maintained.
     void adjustExecutionSchedules();
+    
+    // Function resolves all phi nodes present in the computation
+    void resolvePhiNodes();
 
     //! Deletes statements that writes 
     //! to nodes that are never read from 

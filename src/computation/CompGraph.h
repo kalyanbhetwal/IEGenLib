@@ -119,6 +119,17 @@ namespace iegenlib {
 		// Removes nodes marked unread (no reads and not active-out)
 		void removeDeadNodes(std::vector<int>& stmtIds,
 			std::vector<std::string>& dataSpaces);
+		
+		// Function resolves phiNodes
+		// \param deleteStmtIds list of statements that should be
+		//                      deleted from the computation (active out)
+		//
+		// \param dataMacros    list of macros for memory remapping
+		// 			(lhs) is the first of the pair
+		// 			(rhs) is the second of the pair 
+		void resolvePhiNodes(std::vector<int>& deletStmtIds,
+				std::vector<std::pair<std::string,std::string>>&
+				dataMacros);
 
 		// Converts the graph to the dot file format
 		std::string toDotString();

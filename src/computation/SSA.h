@@ -128,6 +128,15 @@ public:
     std::vector<Set*> getPrefixes(Set*s);
     void rename(Computation * comp);
     void renameSSA(Computation* comp);
-
+    // Function returns unversioned dataspace.
+    // \param versionedDataSpace contains versioned data space name used
+    //                           in SSA
+    std::string getUnversionedDataSpace(const 
+		    std::string& versionedDataSpace);
+    /*
+     * This pass goes through a computation and 
+     * resolves all phi nodes 
+     * */
+    void resolvePhiNodes(Computation* comp);
 };
 #endif
