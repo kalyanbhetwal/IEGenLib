@@ -679,7 +679,7 @@ TEST(SSATest, SSARenameExample) {
 
 }
 
-
+//This is the working example
 TEST(SSATest, HF) {
 
     Computation parflowio;
@@ -722,6 +722,8 @@ TEST(SSATest, HF) {
     parflowio.addDataSpace("byte_offsets", "long*");
     parflowio.addDataSpace("sg_count", "long long");
     parflowio.addDataSpace("x_extent", "int");
+    parflowio.addDataSpace("m_data", "double*");
+    parflowio.addDataSpace("m_fp", "FILE*");
     //reads the header
 
     Stmt *s0 = new Stmt("READDOUBLE(m_X,m_fp,errcheck);    READDOUBLE(m_Y,m_fp,errcheck);    READDOUBLE(m_Z,m_fp,errcheck);    READINT(m_nx,m_fp,errcheck);    READINT(m_ny,m_fp,errcheck);    READINT(m_nz,m_fp,errcheck);    READDOUBLE(m_dX,m_fp,errcheck);    READDOUBLE(m_dY,m_fp,errcheck);    READDOUBLE(m_dZ,m_fp,errcheck);    READINT(m_numSubgrids,m_fp,errcheck);",
@@ -799,7 +801,7 @@ TEST(SSATest, HF) {
                     {"qq" ,"{[nsg]->[0]}"}
             });
 
-   // parflowio.addStmt(s3);
+    parflowio.addStmt(s3);
 
 
 
@@ -816,7 +818,7 @@ TEST(SSATest, HF) {
               return 1;
           }
     */
-//s3
+//s4
     Stmt* s4 = new Stmt("index = qq+k*m_nx*m_ny+i*m_nx; buf = (uint64_t*)&(m_data[index]);read_count = fread(buf,8,nx,m_fp);",
             "{[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids}",
             "{[nsg,k,i]->[2, nsg,2, k, 0,i,0]}",
@@ -836,7 +838,7 @@ TEST(SSATest, HF) {
                 {"index", "{[nsg,k,i] -> [0]}"},
             });
 
-    //parflowio.addStmt(s4);
+    parflowio.addStmt(s4);
 
 // statement
 /*
@@ -865,7 +867,7 @@ TEST(SSATest, HF) {
                     {"m_data", "{[nsg,k,i,j] -> [0]}"}
             });
 
-   // parflowio.addStmt(s5);
+    parflowio.addStmt(s5);
 
 
    parflowio.finalize();
