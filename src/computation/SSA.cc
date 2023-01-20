@@ -448,7 +448,7 @@ void SSA::generateSSA(iegenlib::Computation *comp) {
     Node * node = createScheduleTree(comp);
     node->calc_all_pred();
 
-    //node->printPredDom();
+    node->printPredDom();
 
     node-> computeDF();
 

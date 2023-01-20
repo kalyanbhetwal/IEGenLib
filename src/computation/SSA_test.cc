@@ -169,8 +169,8 @@ TEST(SSATest123, DominanceTreeTEST111){
     //SSA::generateSSA(comp);
     comp->finalize();
     //comp->printInfo();
-    std::cout << comp->codeGen();
-    std:: cout << comp->toDotString();
+    //std::cout << comp->codeGen();
+    //std:: cout << comp->toDotString();
     EXPECT_EQ(1,1);
 
 }
@@ -702,7 +702,7 @@ TEST(SSATest, HF) {
     parflowio.addDataSpace("extent_x", "int");
     parflowio.addDataSpace("qq", "int");
     parflowio.addDataSpace("tmp", "uint64_t");
-    parflowio.addDataSpace("buf", "uint64_t");
+    parflowio.addDataSpace("buf", "uint64_t*");
 
     parflowio.addDataSpace("m_p", "int");
     parflowio.addDataSpace("m_q", "int");
@@ -725,6 +725,17 @@ TEST(SSATest, HF) {
     parflowio.addDataSpace("m_data", "double*");
     parflowio.addDataSpace("m_fp", "FILE*");
     //reads the header
+
+
+
+    Stmt *sread = new Stmt("m_fp = fopen( m_filename.c_str(), 'rb');",
+                           "{[0]}",
+                         "{[0]->[0]}",
+                        {},
+                        {
+                            {"m_fp", "{[0]->[0]}"}
+                           });
+    parflowio.addStmt(sread);
 
     Stmt *s0 = new Stmt("READDOUBLE(m_X,m_fp,errcheck);    READDOUBLE(m_Y,m_fp,errcheck);    READDOUBLE(m_Z,m_fp,errcheck);    READINT(m_nx,m_fp,errcheck);    READINT(m_ny,m_fp,errcheck);    READINT(m_nz,m_fp,errcheck);    READDOUBLE(m_dX,m_fp,errcheck);    READDOUBLE(m_dY,m_fp,errcheck);    READDOUBLE(m_dZ,m_fp,errcheck);    READINT(m_numSubgrids,m_fp,errcheck);",
                         "{[0]}",
@@ -790,7 +801,7 @@ TEST(SSATest, HF) {
             "{[nsg] : 0 <= nsg < m_numSubgrids}",
             "{[nsg]->[2, nsg, 1]}",
             {
-                 {"m_numSubgrids", "{[nsg]->[0]}"},
+                     {"m_numSubgrids", "{[nsg]->[0]}"},
                     {"m_ny", "{[nsg] -> [0]}"},
                     {"m_nx", "{[nsg] -> [0]}"},
                     {"x", "{[nsg] -> [0]}"},
@@ -826,7 +837,6 @@ TEST(SSATest, HF) {
                 {"m_numSubgrids", "{[nsg]->[0]}"},
                     {"m_nx", "{[nsg] -> [0]}"},
                     {"m_ny", "{[nsg] -> [0]}"},
-
                     {"nx", "{[nsg] -> [0]}"},
                     {"ny", "{[nsg] -> [0]}"},
                     {"nz", "{[nsg] -> [0]}"},
@@ -849,7 +859,7 @@ TEST(SSATest, HF) {
         tmp = bswap64(tmp);
         m_data[index+j] = *(double*)(&tmp);
 */
-//s4
+//s5
     Stmt* s5 = new Stmt(" tmp = buf[j];  tmp = bswap64(tmp);  m_data[index+j] = *(double*)(&tmp);",
             "{[nsg,k,i,j] :0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx }",
             "{[nsg,k,i,j]->[2, nsg, 2, k, 0,i,1 ,j,0]}",
@@ -870,8 +880,8 @@ TEST(SSATest, HF) {
     parflowio.addStmt(s5);
 
 
-   parflowio.finalize();
-    std:: cout << parflowio.codeGen();
+  // parflowio.finalize();
+   // std:: cout << parflowio.codeGen();
    // std:: cout << parflowio.toDotString() << '\n';
 
     Stmt *  savg = new Stmt("sum+=test(x,y,z);",
@@ -884,25 +894,25 @@ TEST(SSATest, HF) {
      //  parflowio.addStmt(savg);
 
 
-//    Stmt* s0w = new Stmt("std::FILE* fp = std::fopen(filename.c_str(), 'wb');",3
-//            "{[0]}",
-//            "{[0]->[3]}",
-//            {{"filename", "{[0]->[0]}"}},
-//            {{"fp", "{[0]->[0]}"}});
+    Stmt* s0w = new Stmt("std::FILE* fp = std::fopen(filename.c_str(), 'wb');",
+            "{[0]}",
+            "{[0]->[3]}",
+            {{"filename", "{[0]->[0]}"}},
+            {{"fp", "{[0]->[0]}"}});
 //
-//    parflowio.addStmt(s0w);
+ parflowio.addStmt(s0w);
 
 
     Stmt* s1w = new Stmt("m_numSubgrids = m_p * m_q * m_r;    WRITEDOUBLE(m_X,fp);    WRITEDOUBLE(m_Y,fp);    WRITEDOUBLE(m_Z,fp);    WRITEINT(m_nx,fp);    WRITEINT(m_ny,fp);    WRITEINT(m_nz,fp);    WRITEDOUBLE(m_dX,fp);    WRITEDOUBLE(m_dY,fp);    WRITEDOUBLE(m_dZ,fp);    WRITEINT(m_numSubgrids,fp);max_x_extent =calcExtent(m_nx,m_p,0);",
             "{[0]}",
             "{[0]->[4]}",
-            {{"m_p", "{[0]->[4]}"},
-             {"m_q", "{[0]->[4]}"},
-             {"m_r", "{[0]->[4]}"},
-             {"m_X", "{[0]->[4]}"},
-             {"m_Y", "{[0]->[4]}"},
-             {"m_Z", "{[0]->[4]}"},
-             {"m_nx", "{[0]->[4]}"},
+            {{"m_p", "{[0]->[0]}"},
+             {"m_q", "{[0]->[0]}"},
+             {"m_r", "{[0]->[0]}"},
+             {"m_X", "{[0]->[0]}"},
+             {"m_Y", "{[0]->[0]}"},
+             {"m_Z", "{[0]->[0]}"},
+             {"m_nx", "{[0]->[0]}"},
              {"m_ny", "{[0]->[4]}"},
              {"m_nz", "{[0]->[4]}"},
              {"m_dX", "{[0]->[4]}"},
@@ -915,7 +925,7 @@ TEST(SSATest, HF) {
                     {"fp", "{[0]->[1]}"},
             });
 
-       // parflowio.addStmt(s1w);
+    parflowio.addStmt(s1w);
 
 
         /// how to add this statement
@@ -935,7 +945,7 @@ TEST(SSATest, HF) {
                            {{"filename", "{[0]->[2]}"}},
                            {{"fp", "{[0]->[2]}"}});
 
-        //parflowio.addStmt(s2w);
+        parflowio.addStmt(s2w);
 
         /*
          *     for(int nsg_z=0;nsg_z<m_r;nsg_z++){
@@ -962,9 +972,9 @@ TEST(SSATest, HF) {
                                    {"m_r", "{[nsg_z, nsg_y, nsg_x]->[0]}"},
                                    {"nsg_z", "{[nsg_z, nsg_y, nsg_x]->[0]}"},
                            },
-                           {{"fp", "{[nsg_z, nsg_y, nsg_x]->[0]}"}});
+                           {});
 
-      // parflowio.addStmt(s3w);
+      parflowio.addStmt(s3w);
 
 
         /*
@@ -983,7 +993,7 @@ TEST(SSATest, HF) {
                             },
                             {{"buf", "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0]}"}});
 
-      // parflowio.addStmt(s4r);
+       parflowio.addStmt(s4r);
 
 
         /*
@@ -1056,7 +1066,8 @@ TEST(SSATest, HF) {
     //parflowio.addStmt(s8w);
 
     //Calling
-//    parflowio.finalize();
+     parflowio.finalize();
+     parflowio.codeGen();
 //    std:: cout << parflowio.toDotString() << '\n';
 
 }
@@ -1154,11 +1165,11 @@ TEST(SSATest, PRED_DOM_BUG) {
 
 TEST(SSATest, Function_IN_Execution_S){
 
-    Computation parflowio;
+    Computation parflowio1;
 
     Stmt*s5w = new Stmt("  tmp = buf[j]; tmp = bswap64(tmp); writeBuf[j] = *(double*)(&tmp);",
-                        "{[nsg_z, nsg_y, nsg_x, iz, iy,j]: 0< nsg_z< m_r &&  0< nsg_y< m_q &&  0< nsg_x< m_p   && calcOffset(m_nz,m_r,nsg_z)  <=iz< calcOffset(m_nz,m_r,nsg_z+1) && calcOffset(m_ny,m_q,nsg_y) <=iz< calcOffset(m_ny,m_q,nsg_y+1) && 0<=j<x_extent }",
-                        "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[6,nsg_z,0,nsg_y,0,nsg_x,0,iz,0,iy,1,j,0]}",
+                        "{[nsg_z, nsg_y, nsg_x, iz, iy,j]: 0<= nsg_z< m_r &&  0<= nsg_y< m_q &&  0<= nsg_x< m_p   && calcOffset(m_nz,m_r,nsg_z)  <=iz< calcOffset(m_nz,m_r,nsg_z) && calcOffset(m_ny,m_q,nsg_y) <=iy< calcOffset(m_ny,m_q,nsg_y) && 0<=j<x_extent }",
+                        "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[0,nsg_z,0,nsg_y,0,nsg_x,0,iz,0,iy,0,j,0]}",
                         {
                                 {"buf", "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[j]}"},
                                 {"tmp", "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[0]}"},
@@ -1167,13 +1178,13 @@ TEST(SSATest, Function_IN_Execution_S){
                          {"writeBuf", "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[j]}"}
                         });
 
-     parflowio.addStmt(s5w);
+     parflowio1.addStmt(s5w);
 
 
 
     Stmt*s6w = new Stmt("written = fwrite(writeBuf.data(),sizeof(double),x_extent,fp);",
                         "{[nsg_z, nsg_y, nsg_x, iz, iy]: 0< nsg_z< m_r &&  0< nsg_y< m_q &&  0< nsg_x< m_p  && calcOffset(m_nz,m_r,nsg_z) <=iz< calcOffset(m_nz,m_r,nsg_z) && calcOffset(m_ny,m_q,nsg_y) <=iz< calcOffset(m_ny,m_q,nsg_y) }",
-                        "{[nsg_z, nsg_y, nsg_x, iz, iy]->[6,nsg_z,0,nsg_y,0,nsg_x,0,iz,0,iy,1]}",
+                        "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0,nsg_z,0,nsg_y,0,nsg_x,0,iz,0,iy,1]}",
                         {
                                 {"writeBuf", "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0]}"},
                                 {"x_extent", "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0]}"},
@@ -1183,8 +1194,11 @@ TEST(SSATest, Function_IN_Execution_S){
                                 {"fp", "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0]}"},
                         });
 
-    parflowio.addStmt(s6w);
+   // parflowio.addStmt(s6w);
 
-    parflowio.finalize();
+
+   // parflowio1.finalize();
+
+    std::cout << parflowio1.codeGen();
 
 }
