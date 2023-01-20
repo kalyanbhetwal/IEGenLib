@@ -1168,7 +1168,7 @@ TEST(SSATest, Function_IN_Execution_S){
     Computation parflowio1;
 
     Stmt*s5w = new Stmt("  tmp = buf[j]; tmp = bswap64(tmp); writeBuf[j] = *(double*)(&tmp);",
-                        "{[nsg_z, nsg_y, nsg_x, iz, iy,j]: 0<= nsg_z< m_r &&  0<= nsg_y< m_q &&  0<= nsg_x< m_p   && calcOffset(m_nz,m_r,nsg_z)  <=iz< calcOffset(m_nz,m_r,nsg_z) && calcOffset(m_ny,m_q,nsg_y) <=iy< calcOffset(m_ny,m_q,nsg_y) && 0<=j<x_extent }",
+                        "{[nsg_z, nsg_y, nsg_x, iz, iy,j]: 0<= nsg_z< m_r &&  0<= nsg_y< m_q &&  0<= nsg_x< m_p && 0<=j<x_extent  &&  calcOffset(m_nz,m_r,nsg_z)<=iz<calcOffset(m_nz,m_r,nsg_z+1)    && calcOffset(m_ny,m_q,nsg_y) <=iy< calcOffset(m_ny,m_q,nsg_y+1)}",
                         "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[0,nsg_z,0,nsg_y,0,nsg_x,0,iz,0,iy,0,j,0]}",
                         {
                                 {"buf", "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[j]}"},
@@ -1197,8 +1197,8 @@ TEST(SSATest, Function_IN_Execution_S){
    // parflowio.addStmt(s6w);
 
 
-   // parflowio1.finalize();
+    //parflowio1.finalize();
 
-    std::cout << parflowio1.codeGen();
+    std::cout<<parflowio1.codeGen();
 
 }
