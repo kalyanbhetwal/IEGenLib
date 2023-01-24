@@ -178,102 +178,6 @@ TEST(SSATest123, DominanceTreeTEST111){
 }
 
 
-TEST(SSATest123, RESOLVE_PHI_NODES_TEST){
-
-
-    Computation * comp = new Computation();
-    comp->addDataSpace("x", "int");
-    comp->addStmt(new Stmt (
-            "x = 1;",
-            "{[0]}",
-            "{[0]->[0]}",
-            {},
-            {{"x", "{[0]->[0]}"}}
-    ));
-    comp->addStmt(new Stmt (
-            "x = 2;",
-            "{[0]}",
-            "{[0]->[1]}",
-            {{"x", "{[0]->[0]}"}},
-            {{"x", "{[0]->[0]}"}}
-    ));
-    comp->addStmt(new Stmt (
-            "x = 2;",
-            "{[t,p]:0<=t<M && p> 10}",
-            "{[t,p]->[2,t,0,p,0]}",
-            {{"x", "{[t,p]->[t,p]}"}},
-            {{"x", "{[t,p]->[t,p]}"}}
-    ));
-    comp->addStmt(new Stmt (
-            "x = 2;",
-            "{[t,p,q]:0<=t<M && p>10 && q>10}",
-            "{[t,p,q]->[2,t,0,p,1,q,0]}",
-            {{"x", "{[t,p,q]->[t,p,q]}"}},
-            {{"x", "{[t,p,q]->[t,p,q]}"}}
-    ));
-    comp->addStmt(new Stmt (
-            "x = 2;",
-            "{[t,p,v]:0<=t<M && p>10 && v<=10}",
-            "{[t,p,v]->[2,t,0,p,1,v,0]}",
-            {{"x", "{[t,p,v]->[t,p,v]}"}},
-            {{"x", "{[t,p,v]->[t,p,v]}"}}
-    ));
-    comp->addStmt(new Stmt (
-            "x = 2;",
-            "{[t,p]:0<=t<M && p>10}",
-            "{[t,p]->[2,t,0,p,2]}",
-            {{"x", "{[t,p]->[t,p]}"}},
-            {{"x", "{[t,p]->[t,p]}"}}
-    ));
-    comp->addStmt(new Stmt (
-            "x = 2;",
-            "{[t,u]:0<=t<M && u<=10}",
-            "{[t,u]->[2,t,0,u,0]}",
-            {{"x", "{[t,u]->[t,u]}"}},
-            {{"x", "{[t,u]->[t,u]}"}}
-    ));
-    comp->addStmt(new Stmt (
-            "x = 2;",
-            "{[t]:0<=t<M}",
-            "{[t]->[2,t,1]}",
-            {{"x", "{[t]->[t]}"}},
-            {{"x", "{[t]->[t]}"}}
-    ));
-    comp->addStmt(new Stmt (
-            "x = 2;",
-            "{[t,s,r]:0<=t<M && s>10 && r>20}",
-            "{[t,s,r]->[2,t,3,s,0,r,0]}",
-            {{"x", "{[t,s,r]->[t,s,r]}"}},
-            {{"x", "{[t,s,r]->[t,s,r]}"}}
-    ));
-
-    comp->addStmt(new Stmt (
-            "x = 2;",
-            "{[t]:0<=t<M}",
-            "{[t]->[2,t,4]}",
-            {{"x", "{[t]->[t]}"}},
-            {{"x", "{[t]->[t]}"}}
-    ));
-    comp->addStmt(new Stmt (
-            "x = 2;",
-            "{[0]}",
-            "{[0]->[3]}",
-            {{"x", "{[0]->[0]}"}},
-            {{"x", "{[0]->[0]}"}}
-    ));
-    SSA::generateSSA(comp);
-    
-    comp->finalize();
-    std:: cout << comp->toDotString();
-    std::cout << "Phi Nodes Resolve \n";
-    comp->resolvePhiNodes(); 
-    std::cout << "After PhiNode Resolution\n";
-    std::cout << comp->toDotString();
-    EXPECT_EQ(1,1);
-
-}
-
-
 
 
 TEST(SSATest,AllPossiblePathsTest){
@@ -780,7 +684,7 @@ TEST(SSATest, SSARenameExample) {
 
 }
 
-
+//This is the working example
 TEST(SSATest, HF) {
 
     Computation parflowio;
@@ -803,7 +707,7 @@ TEST(SSATest, HF) {
     parflowio.addDataSpace("extent_x", "int");
     parflowio.addDataSpace("qq", "int");
     parflowio.addDataSpace("tmp", "uint64_t");
-    parflowio.addDataSpace("buf", "uint64_t");
+    parflowio.addDataSpace("buf", "uint64_t*");
 
     parflowio.addDataSpace("m_p", "int");
     parflowio.addDataSpace("m_q", "int");
@@ -823,11 +727,24 @@ TEST(SSATest, HF) {
     parflowio.addDataSpace("byte_offsets", "long*");
     parflowio.addDataSpace("sg_count", "long long");
     parflowio.addDataSpace("x_extent", "int");
+    parflowio.addDataSpace("m_data", "double*");
+    parflowio.addDataSpace("m_fp", "FILE*");
     //reads the header
+
+
+
+    Stmt *sread = new Stmt("m_fp = fopen( m_filename.c_str(), 'rb');",
+                           "{[0]}",
+                         "{[0]->[0]}",
+                        {},
+                        {
+                            {"m_fp", "{[0]->[0]}"}
+                           });
+    parflowio.addStmt(sread);
 
     Stmt *s0 = new Stmt("READDOUBLE(m_X,m_fp,errcheck);    READDOUBLE(m_Y,m_fp,errcheck);    READDOUBLE(m_Z,m_fp,errcheck);    READINT(m_nx,m_fp,errcheck);    READINT(m_ny,m_fp,errcheck);    READINT(m_nz,m_fp,errcheck);    READDOUBLE(m_dX,m_fp,errcheck);    READDOUBLE(m_dY,m_fp,errcheck);    READDOUBLE(m_dZ,m_fp,errcheck);    READINT(m_numSubgrids,m_fp,errcheck);",
                         "{[0]}",
-                        "{[0]->[0]}",
+                        "{[0]->[1]}",
                         {},
                         {
                                 {"m_X", "{[0]->[0]}"},
@@ -847,7 +764,7 @@ TEST(SSATest, HF) {
 
     Stmt *s1 = new Stmt("m_data = (double*)std::malloc(sizeof(double)*m_nx*m_ny*m_nz);",
                         "{[0]}",
-                        "{[0]->[1]}",
+                        "{[0]->[2]}",
                         {
                                 {"m_nx", "{[0]->[0]}"},
                                 {"m_ny", "{[0]->[0]}"},
@@ -864,7 +781,7 @@ TEST(SSATest, HF) {
 //s2
     Stmt *s2 = new Stmt("READINT(x,m_fp,errcheck);READINT(y,m_fp,errcheck);READINT(z,m_fp,errcheck);READINT(nx,m_fp,errcheck);READINT(ny,m_fp,errcheck);READINT(nz,m_fp,errcheck);READINT(rx,m_fp,errcheck);READINT(ry,m_fp,errcheck);READINT(rz,m_fp,errcheck);",
             "{[nsg]:0 <= nsg < m_numSubgrids}",
-            "{[nsg]->[2,nsg,0]}",
+            "{[nsg]->[3,nsg,0]}",
             {
                         {"m_numSubgrids", "{[nsg]->[0]}"}
             },
@@ -887,9 +804,9 @@ TEST(SSATest, HF) {
 //s3
     Stmt* s3 = new Stmt("qq = z*m_nx*m_ny + y*m_nx + x",
             "{[nsg] : 0 <= nsg < m_numSubgrids}",
-            "{[nsg]->[2, nsg, 1]}",
+            "{[nsg]->[3, nsg, 1]}",
             {
-                 {"m_numSubgrids", "{[nsg]->[0]}"},
+                     {"m_numSubgrids", "{[nsg]->[0]}"},
                     {"m_ny", "{[nsg] -> [0]}"},
                     {"m_nx", "{[nsg] -> [0]}"},
                     {"x", "{[nsg] -> [0]}"},
@@ -900,7 +817,7 @@ TEST(SSATest, HF) {
                     {"qq" ,"{[nsg]->[0]}"}
             });
 
-   // parflowio.addStmt(s3);
+    parflowio.addStmt(s3);
 
 
 
@@ -917,15 +834,14 @@ TEST(SSATest, HF) {
               return 1;
           }
     */
-//s3
+//s4
     Stmt* s4 = new Stmt("index = qq+k*m_nx*m_ny+i*m_nx; buf = (uint64_t*)&(m_data[index]);read_count = fread(buf,8,nx,m_fp);",
             "{[nsg,k,i] : 0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids}",
-            "{[nsg,k,i]->[2, nsg,2, k, 0,i,0]}",
+            "{[nsg,k,i]->[3, nsg,2, k, 0,i,0]}",
             {
                 {"m_numSubgrids", "{[nsg]->[0]}"},
                     {"m_nx", "{[nsg] -> [0]}"},
                     {"m_ny", "{[nsg] -> [0]}"},
-
                     {"nx", "{[nsg] -> [0]}"},
                     {"ny", "{[nsg] -> [0]}"},
                     {"nz", "{[nsg] -> [0]}"},
@@ -937,7 +853,7 @@ TEST(SSATest, HF) {
                 {"index", "{[nsg,k,i] -> [0]}"},
             });
 
-    //parflowio.addStmt(s4);
+    parflowio.addStmt(s4);
 
 // statement
 /*
@@ -948,10 +864,10 @@ TEST(SSATest, HF) {
         tmp = bswap64(tmp);
         m_data[index+j] = *(double*)(&tmp);
 */
-//s4
+//s5
     Stmt* s5 = new Stmt(" tmp = buf[j];  tmp = bswap64(tmp);  m_data[index+j] = *(double*)(&tmp);",
             "{[nsg,k,i,j] :0 <= k < nz && 0<=i<ny && 0 <= nsg < m_numSubgrids && 0<=j<nx }",
-            "{[nsg,k,i,j]->[2, nsg, 2, k, 0,i,1 ,j,0]}",
+            "{[nsg,k,i,j]->[3, nsg, 2, k, 0,i,1 ,j,0]}",
             {
                     {"m_numSubgrids", "{[nsg]->[0]}"},
                     {"buf","{[nsg,k,i,j]->[j]}" },
@@ -966,55 +882,80 @@ TEST(SSATest, HF) {
                     {"m_data", "{[nsg,k,i,j] -> [0]}"}
             });
 
-   // parflowio.addStmt(s5);
+    parflowio.addStmt(s5);
 
 
-   parflowio.finalize();
-    std:: cout << parflowio.codeGen();
+  // parflowio.finalize();
+   // std:: cout << parflowio.codeGen();
    // std:: cout << parflowio.toDotString() << '\n';
+   Computation parflowio_mean;
 
-    Stmt *  savg = new Stmt("sum+=test(x,y,z);",
-              "{[z,y,x] :0<=z<NZ && 0<=y<=NY && 0<=x<NX}",
-              "{[z,y,x]->[3, z,0,y,0,x,0]}",
+    Stmt * mean1 = new Stmt("mean = (double*)malloc(sizeof(double)m_ny*m_nx);",
+                       "{[0]}",
+                       "{[0]->[0]}",
+                       {},
+                       {{"mean","{[0]->[0]}"}});
+    parflowio_mean.addStmt(mean1);
+
+
+    Stmt * mean2 = new Stmt("sum=0;",
+                            "{[y,x]:0<=y<m_ny && 0<=x<m_nx}",
+                            "{[y,x]->[0,y,0,x,0]}",
                             {},
-        {
-                 {"sum","{[0]->[0]}"}
-        });
-     //  parflowio.addStmt(savg);
+                            {{"sum","{[0]->[0]}"}});
+    parflowio_mean.addStmt(mean2);
 
 
-//    Stmt* s0w = new Stmt("std::FILE* fp = std::fopen(filename.c_str(), 'wb');",3
-//            "{[0]}",
-//            "{[0]->[3]}",
-//            {{"filename", "{[0]->[0]}"}},
-//            {{"fp", "{[0]->[0]}"}});
+    Stmt * mean3 = new Stmt("sum+=m_data[(long long)(z)*m_ny*m_nx+y*m_nx+x];",
+                            "{[y,x,z]:0<=y<m_ny && 0<=x<m_nx && 0<=z<m_nz}",
+                            "{[y,x,z]->[0,y,0,x,1,z,0]}",
+                            {{"m_data","{[0]->[0]}"}},
+                            {{"sum","{[0]->[0]}"}});
+    parflowio_mean.addStmt(mean3);
+
+
+    Stmt * mean4 = new Stmt("mean[x+y*m_nx] = sum/m_nz;\"",
+                            "{[y,x]:0<=y<m_ny && 0<=x<m_nx}",
+                            "{[y,x]->[0,y,0,x,2]}",
+                            {{"sum","{[0]->[0]}"},
+                                           {"m_nz","{[0]->[0]}"}},
+                            {{"sum","{[0]->[0]}"}});
+    parflowio_mean.addStmt(mean2);
+
+
+
+    Stmt* s0w = new Stmt("std::FILE* fp = std::fopen(filename.c_str(), 'wb');",
+            "{[0]}",
+            "{[0]->[3]}",
+            {{"filename", "{[0]->[0]}"}},
+            {{"fp", "{[0]->[0]}"}});
 //
-//    parflowio.addStmt(s0w);
+    parflowio.addStmt(s0w);
 
 
     Stmt* s1w = new Stmt("m_numSubgrids = m_p * m_q * m_r;    WRITEDOUBLE(m_X,fp);    WRITEDOUBLE(m_Y,fp);    WRITEDOUBLE(m_Z,fp);    WRITEINT(m_nx,fp);    WRITEINT(m_ny,fp);    WRITEINT(m_nz,fp);    WRITEDOUBLE(m_dX,fp);    WRITEDOUBLE(m_dY,fp);    WRITEDOUBLE(m_dZ,fp);    WRITEINT(m_numSubgrids,fp);max_x_extent =calcExtent(m_nx,m_p,0);",
             "{[0]}",
             "{[0]->[4]}",
-            {{"m_p", "{[0]->[4]}"},
-             {"m_q", "{[0]->[4]}"},
-             {"m_r", "{[0]->[4]}"},
-             {"m_X", "{[0]->[4]}"},
-             {"m_Y", "{[0]->[4]}"},
-             {"m_Z", "{[0]->[4]}"},
-             {"m_nx", "{[0]->[4]}"},
-             {"m_ny", "{[0]->[4]}"},
-             {"m_nz", "{[0]->[4]}"},
-             {"m_dX", "{[0]->[4]}"},
-             {"m_dY", "{[0]->[4]}"},
-             {"m_dZ", "{[0]->[4]}"},
-             {"m_numSubgrids", "{[0]->[4]}"}},
+            {{"m_p", "{[0]->[0]}"},
+             {"m_q", "{[0]->[0]}"},
+             {"m_r", "{[0]->[0]}"},
+             {"m_X", "{[0]->[0]}"},
+             {"m_Y", "{[0]->[0]}"},
+             {"m_Z", "{[0]->[0]}"},
+             {"m_nx", "{[0]->[0]}"},
+             {"m_ny", "{[0]->[0]}"},
+             {"m_nz", "{[0]->[0]}"},
+             {"m_dX", "{[0]->[0]}"},
+             {"m_dY", "{[0]->[0]}"},
+             {"m_dZ", "{[0]->[0]}"},
+             {"m_numSubgrids", "{[0]->[0]}"}},
             {
-                    {"m_numSubgrids", "{[0]->[1]}"},
-                    {"max_x_extent", "{[0]->[1]}"},
-                    {"fp", "{[0]->[1]}"},
+                    {"m_numSubgrids", "{[0]->[0]}"},
+                    {"max_x_extent", "{[0]->[0]}"},
+                    {"fp", "{[0]->[0]}"},
             });
 
-       // parflowio.addStmt(s1w);
+    parflowio.addStmt(s1w);
 
 
         /// how to add this statement
@@ -1034,7 +975,7 @@ TEST(SSATest, HF) {
                            {{"filename", "{[0]->[2]}"}},
                            {{"fp", "{[0]->[2]}"}});
 
-        //parflowio.addStmt(s2w);
+        parflowio.addStmt(s2w);
 
         /*
          *     for(int nsg_z=0;nsg_z<m_r;nsg_z++){
@@ -1061,9 +1002,9 @@ TEST(SSATest, HF) {
                                    {"m_r", "{[nsg_z, nsg_y, nsg_x]->[0]}"},
                                    {"nsg_z", "{[nsg_z, nsg_y, nsg_x]->[0]}"},
                            },
-                           {{"fp", "{[nsg_z, nsg_y, nsg_x]->[0]}"}});
+                           {});
 
-      // parflowio.addStmt(s3w);
+      parflowio.addStmt(s3w);
 
 
         /*
@@ -1075,14 +1016,14 @@ TEST(SSATest, HF) {
 
 
         Stmt *s4r = new Stmt("buf = (uint64_t*)&(m_data[iz*m_nx*m_ny+iy*m_nx+calcOffset(m_nx,m_p,nsg_x)]);",
-                            "{[nsg_z, nsg_y, nsg_x, iz, iy]: 0< nsg_z< m_r &&  0< nsg_y< m_q &&  0< nsg_x< m_p  && calcOffset(m_nz,m_r,nsg_z)  <=iz< calcOffset(m_nz,m_r,nsg_z+1) && calcOffset(m_ny,m_q,nsg_y) <=iz< calcOffset(m_ny,m_q,nsg_y+1) }",
+                            "{[nsg_z, nsg_y, nsg_x, iz, iy]: 0< nsg_z< m_r &&  0< nsg_y< m_q &&  0< nsg_x< m_p  && calcOffset(m_nz,m_r,nsg_z)  <=iz< calcOffset(m_nz,m_r,nsg_z+1) && calcOffset(m_ny,m_q,nsg_y) <=iy< calcOffset(m_ny,m_q,nsg_y+1) }",
                             "{[nsg_z, nsg_y, nsg_x, iz, iy]->[6,nsg_z,0,nsg_y,0,nsg_x,0,iz,0,iy,0]}",
                             {
                                     {"m_data", "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0]}"},
                             },
                             {{"buf", "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0]}"}});
 
-      // parflowio.addStmt(s4r);
+       parflowio.addStmt(s4r);
 
 
         /*
@@ -1095,8 +1036,8 @@ TEST(SSATest, HF) {
          */
 
 
-        Stmt*s5w = new Stmt("  tmp = buf[j]; tmp = bswap64(tmp); writeBuf[j] = *(double*)(&tmp);",
-                           "{[nsg_z, nsg_y, nsg_x, iz, iy,j]: 0< nsg_z< m_r &&  0< nsg_y< m_q &&  0< nsg_x< m_p   && calcOffset(m_nz,m_r,nsg_z)  <=iz< calcOffset(m_nz,m_r,nsg_z+1) && calcOffset(m_ny,m_q,nsg_y) <=iz< calcOffset(m_ny,m_q,nsg_y+1) && 0<=j<x_extent }",
+        Stmt*s5w = new Stmt("tmp = buf[j]; tmp = bswap64(tmp); writeBuf[j] = *(double*)(&tmp);",
+                           "{[nsg_z, nsg_y, nsg_x, iz, iy,j]: 0<= nsg_z< m_r &&  0<= nsg_y< m_q &&  0<= nsg_x< m_p   && calcOffset(m_nz,m_r,nsg_z) <=iz< calcOffset(m_nz,m_r,nsg_z) && calcOffset(m_ny,m_q,nsg_y) <=iy< calcOffset(m_ny,m_q,nsg_y) && 0<=j<x_extent }",
                            "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[6,nsg_z,0,nsg_y,0,nsg_x,0,iz,0,iy,1,j,0]}",
                            {
                                    {"buf", "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[j]}"},
@@ -1111,7 +1052,7 @@ TEST(SSATest, HF) {
 
 
         Stmt*s6w = new Stmt("written = fwrite(writeBuf.data(),sizeof(double),x_extent,fp);",
-                           "{[nsg_z, nsg_y, nsg_x, iz, iy]: 0< nsg_z< m_r &&  0< nsg_y< m_q &&  0< nsg_x< m_p  && calcOffset(m_nz,m_r,nsg_z) <=iz< calcOffset(m_nz,m_r,nsg_z) && calcOffset(m_ny,m_q,nsg_y) <=iz< calcOffset(m_ny,m_q,nsg_y) }",
+                           "{[nsg_z, nsg_y, nsg_x, iz, iy]: 0<= nsg_z< m_r &&  0<= nsg_y< m_q &&  0<= nsg_x< m_p  && calcOffset(m_nz,m_r,nsg_z) <=iz< calcOffset(m_nz,m_r,nsg_z) && calcOffset(m_ny,m_q,nsg_y) <=iy< calcOffset(m_ny,m_q,nsg_y) }",
                            "{[nsg_z, nsg_y, nsg_x, iz, iy]->[6,nsg_z,0,nsg_y,0,nsg_x,0,iz,0,iy,1]}",
                            {
                                    {"writeBuf", "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0]}"},
@@ -1155,7 +1096,8 @@ TEST(SSATest, HF) {
     //parflowio.addStmt(s8w);
 
     //Calling
-//    parflowio.finalize();
+     parflowio.finalize();
+     parflowio.codeGen();
 //    std:: cout << parflowio.toDotString() << '\n';
 
 }
@@ -1253,11 +1195,11 @@ TEST(SSATest, PRED_DOM_BUG) {
 
 TEST(SSATest, Function_IN_Execution_S){
 
-    Computation parflowio;
+    Computation parflowio1;
 
     Stmt*s5w = new Stmt("  tmp = buf[j]; tmp = bswap64(tmp); writeBuf[j] = *(double*)(&tmp);",
-                        "{[nsg_z, nsg_y, nsg_x, iz, iy,j]: 0< nsg_z< m_r &&  0< nsg_y< m_q &&  0< nsg_x< m_p   && calcOffset(m_nz,m_r,nsg_z)  <=iz< calcOffset(m_nz,m_r,nsg_z+1) && calcOffset(m_ny,m_q,nsg_y) <=iz< calcOffset(m_ny,m_q,nsg_y+1) && 0<=j<x_extent }",
-                        "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[6,nsg_z,0,nsg_y,0,nsg_x,0,iz,0,iy,1,j,0]}",
+                        "{[nsg_z, nsg_y, nsg_x, iz, iy,j]: 0<= nsg_z< m_r &&  0<= nsg_y< m_q &&  0<= nsg_x< m_p && 0<=j<x_extent  &&  calcOffset(m_nz,m_r,nsg_z)<=iz<calcOffset(m_nz,m_r,nsg_z+1)    && calcOffset(m_ny,m_q,nsg_y) <=iy< calcOffset(m_ny,m_q,nsg_y+1)}",
+                        "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[0,nsg_z,0,nsg_y,0,nsg_x,0,iz,0,iy,0,j,0]}",
                         {
                                 {"buf", "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[j]}"},
                                 {"tmp", "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[0]}"},
@@ -1266,13 +1208,13 @@ TEST(SSATest, Function_IN_Execution_S){
                          {"writeBuf", "{[nsg_z, nsg_y, nsg_x, iz, iy,j]->[j]}"}
                         });
 
-     parflowio.addStmt(s5w);
+     parflowio1.addStmt(s5w);
 
 
 
     Stmt*s6w = new Stmt("written = fwrite(writeBuf.data(),sizeof(double),x_extent,fp);",
                         "{[nsg_z, nsg_y, nsg_x, iz, iy]: 0< nsg_z< m_r &&  0< nsg_y< m_q &&  0< nsg_x< m_p  && calcOffset(m_nz,m_r,nsg_z) <=iz< calcOffset(m_nz,m_r,nsg_z) && calcOffset(m_ny,m_q,nsg_y) <=iz< calcOffset(m_ny,m_q,nsg_y) }",
-                        "{[nsg_z, nsg_y, nsg_x, iz, iy]->[6,nsg_z,0,nsg_y,0,nsg_x,0,iz,0,iy,1]}",
+                        "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0,nsg_z,0,nsg_y,0,nsg_x,0,iz,0,iy,1]}",
                         {
                                 {"writeBuf", "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0]}"},
                                 {"x_extent", "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0]}"},
@@ -1282,8 +1224,11 @@ TEST(SSATest, Function_IN_Execution_S){
                                 {"fp", "{[nsg_z, nsg_y, nsg_x, iz, iy]->[0]}"},
                         });
 
-    parflowio.addStmt(s6w);
+   // parflowio.addStmt(s6w);
 
-    parflowio.finalize();
+
+    //parflowio1.finalize();
+
+    std::cout<<parflowio1.codeGen();
 
 }
